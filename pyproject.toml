@@ -28,8 +28,8 @@ local = ["fastembed>=0.4"]
 all = ["openai>=1.0", "fastembed>=0.4"]
 
 [project.urls]
-Homepage = "https://github.com/leo/opensearch-client"
-Repository = "https://github.com/leo/opensearch-client"
+Homepage = "https://github.com/namyoungkim/opensearch-client"
+Repository = "https://github.com/namyoungkim/opensearch-client"
 
 [build-system]
 requires = ["hatchling"]
