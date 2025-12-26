@@ -1,0 +1,106 @@
+"""
+OpenAI 임베딩 구현
+
+OpenAI API를 사용한 임베딩
+"""
+
+from typing import List, Optional
+from opensearch_client.semantic_search.embeddings.base import BaseEmbedding
+
+
+class OpenAIEmbedding(BaseEmbedding):
+    """
+    OpenAI API 기반 임베딩
+
+    사용 가능한 모델:
+    - text-embedding-3-small (1536 dim)
+    - text-embedding-3-large (3072 dim)
+    - text-embedding-ada-002 (1536 dim, legacy)
+    """
+
+    DEFAULT_MODEL = "text-embedding-3-small"
+    MODEL_DIMENSIONS = {
+        "text-embedding-3-small": 1536,
+        "text-embedding-3-large": 3072,
+        "text-embedding-ada-002": 1536,
+    }
+
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        model_name: Optional[str] = None,
+        dimensions: Optional[int] = None
+    ):
+        """
+        OpenAI 임베딩 초기화
+
+        Args:
+            api_key: OpenAI API 키 (없으면 OPENAI_API_KEY 환경 변수 사용)
+            model_name: 사용할 모델 이름 (기본: text-embedding-3-small)
+            dimensions: 출력 차원 수 (text-embedding-3-* 모델에서 지원)
+
+        Raises:
+            ImportError: openai가 설치되지 않은 경우
+        """
+        try:
+            from openai import OpenAI
+        except ImportError:
+            raise ImportError(
+                "openai is not installed. "
+                "Install it with: uv add opensearch-client[openai]"
+            )
+
+        self._model_name = model_name or self.DEFAULT_MODEL
+        self._dimensions = dimensions
+        self._default_dimension = self.MODEL_DIMENSIONS.get(self._model_name, 1536)
+
+        # OpenAI 클라이언트 초기화
+        self._client = OpenAI(api_key=api_key)
+
+    @property
+    def dimension(self) -> int:
+        return self._dimensions or self._default_dimension
+
+    @property
+    def model_name(self) -> str:
+        return self._model_name
+
+    def embed(self, text: str) -> List[float]:
+        """
+        단일 텍스트 임베딩
+
+        Args:
+            text: 임베딩할 텍스트
+
+        Returns:
+            벡터 (float 리스트)
+        """
+        kwargs = {"input": text, "model": self._model_name}
+
+        # text-embedding-3-* 모델은 dimensions 파라미터 지원
+        if self._dimensions and self._model_name.startswith("text-embedding-3"):
+            kwargs["dimensions"] = self._dimensions
+
+        response = self._client.embeddings.create(**kwargs)
+        return response.data[0].embedding
+
+    def embed_batch(self, texts: List[str]) -> List[List[float]]:
+        """
+        배치 임베딩
+
+        Args:
+            texts: 임베딩할 텍스트 리스트
+
+        Returns:
+            벡터 리스트
+        """
+        kwargs = {"input": texts, "model": self._model_name}
+
+        if self._dimensions and self._model_name.startswith("text-embedding-3"):
+            kwargs["dimensions"] = self._dimensions
+
+        response = self._client.embeddings.create(**kwargs)
+
+        # 인덱스 순서대로 정렬
+        sorted_embeddings = sorted(response.data, key=lambda x: x.index)
+        return [emb.embedding for emb in sorted_embeddings]

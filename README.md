@@ -1,0 +1,229 @@
+# OpenSearch Client
+
+OpenSearch client with hybrid search support for Korean text.
+
+## Features
+
+- **Text Search**: Multi-match queries with Korean (Nori) analyzer
+- **Semantic Search**: Vector embeddings with k-NN search
+- **Hybrid Search**: Combined text + vector search with Search Pipeline (OpenSearch 2.10+)
+- **VectorStore**: Simple high-level API for vector storage and retrieval
+
+## Installation
+
+```bash
+# Basic installation
+uv add opensearch-client
+
+# With OpenAI embeddings
+uv add opensearch-client[openai]
+
+# With local embeddings (FastEmbed)
+uv add opensearch-client[local]
+
+# All features
+uv add opensearch-client[all]
+```
+
+## Quick Start
+
+```python
+from opensearch_client import OpenSearchClient
+
+# Initialize client
+client = OpenSearchClient(
+    host="localhost",
+    port=9200,
+    user="admin",
+    password="admin"
+)
+
+# Check connection
+print(client.ping())
+```
+
+## Usage Examples
+
+### 1. Text Search
+
+```python
+from opensearch_client import OpenSearchClient, TextQueryBuilder, IndexManager
+
+client = OpenSearchClient(host="localhost", port=9200, use_ssl=False)
+
+# Create text index with Korean analyzer
+body = IndexManager.create_text_index_body(
+    text_field="content",
+    use_korean_analyzer=True
+)
+client.create_index("my-docs", body)
+
+# Index documents
+client.bulk_index("my-docs", [
+    {"title": "OpenSearch", "content": "OpenSearch는 검색 엔진입니다."},
+    {"title": "Python", "content": "Python은 프로그래밍 언어입니다."},
+])
+client.refresh("my-docs")
+
+# Multi-match search
+query = TextQueryBuilder.multi_match(
+    query="검색 엔진",
+    fields=["title", "content"],
+    boost_map={"title": 2.0, "content": 1.0}
+)
+body = TextQueryBuilder.build_search_body(query, size=10)
+results = client.search("my-docs", body)
+```
+
+### 2. Semantic Search (k-NN)
+
+```python
+from opensearch_client import OpenSearchClient, IndexManager
+from opensearch_client.semantic_search.knn_search import KNNSearch
+from opensearch_client.semantic_search.embeddings import FastEmbedEmbedding
+
+# Initialize embedder
+embedder = FastEmbedEmbedding(model_name="BAAI/bge-small-en-v1.5")
+
+# Create vector index
+body = IndexManager.create_vector_index_body(
+    vector_field="embedding",
+    vector_dimension=embedder.dimension
+)
+client.create_index("semantic-docs", body)
+
+# Index with embeddings
+text = "OpenSearch is a search engine"
+client.index_document("semantic-docs", {
+    "text": text,
+    "embedding": embedder.embed(text)
+})
+client.refresh("semantic-docs")
+
+# k-NN search
+query_vector = embedder.embed("search engine")
+query = KNNSearch.knn_query(
+    field="embedding",
+    vector=query_vector,
+    k=10
+)
+body = KNNSearch.build_search_body(query, size=10)
+results = client.search("semantic-docs", body)
+```
+
+### 3. Hybrid Search (Recommended)
+
+```python
+from opensearch_client import OpenSearchClient, IndexManager, HybridQueryBuilder
+from opensearch_client.semantic_search.embeddings import OpenAIEmbedding
+
+# Initialize
+client = OpenSearchClient(host="localhost", port=9200, use_ssl=False)
+embedder = OpenAIEmbedding()  # Uses OPENAI_API_KEY env var
+
+# Create hybrid index (text + vector)
+body = IndexManager.create_hybrid_index_body(
+    text_field="content",
+    vector_field="embedding",
+    vector_dimension=embedder.dimension,
+    use_korean_analyzer=True
+)
+client.create_index("hybrid-docs", body)
+
+# Setup Search Pipeline (required for hybrid search)
+client.setup_hybrid_pipeline(
+    pipeline_id="my-pipeline",
+    text_weight=0.3,   # 30% text score
+    vector_weight=0.7  # 70% vector score
+)
+
+# Index documents
+text = "OpenSearch는 텍스트와 벡터 검색을 지원합니다."
+client.index_document("hybrid-docs", {
+    "content": text,
+    "embedding": embedder.embed(text)
+})
+client.refresh("hybrid-docs")
+
+# Hybrid search
+search_text = "벡터 검색"
+results = client.hybrid_search(
+    index_name="hybrid-docs",
+    query=search_text,
+    query_vector=embedder.embed(search_text),
+    pipeline="my-pipeline",
+    text_fields=["content"],
+    vector_field="embedding",
+    k=10
+)
+```
+
+### 4. VectorStore (Simplified API)
+
+```python
+from opensearch_client import OpenSearchClient, VectorStore
+from opensearch_client.semantic_search.embeddings import FastEmbedEmbedding
+
+# Initialize
+client = OpenSearchClient(host="localhost", port=9200, use_ssl=False)
+embedder = FastEmbedEmbedding()  # or OpenAIEmbedding()
+
+# Create store (auto-creates index and pipeline)
+store = VectorStore("my-store", embedder, client)
+
+# Add documents (auto-embeds text)
+store.add([
+    "OpenSearch는 검색 엔진입니다.",
+    "Python은 프로그래밍 언어입니다.",
+    "벡터 검색은 유사도 기반 검색입니다.",
+])
+
+# Add with metadata
+store.add(
+    ["FastEmbed는 빠른 임베딩 라이브러리입니다."],
+    metadata=[{"category": "tech", "source": "docs"}]
+)
+
+# Search
+results = store.search("검색 엔진이 뭐야?", k=3)
+for r in results:
+    print(f"{r.score:.3f}: {r.text}")
+
+# Other operations
+store.count()              # Get document count
+store.delete(["doc-id"])   # Delete by ID
+store.clear()              # Delete all documents
+```
+
+## Development
+
+```bash
+# Install dev dependencies
+uv sync --all-extras
+
+# Run unit tests
+uv run pytest tests/unit -v
+
+# Run integration tests (requires OpenSearch)
+docker compose -f docker-compose.test.yml up -d
+uv run pytest tests/integration -v
+
+# Run all tests with coverage
+uv run pytest --cov=opensearch_client --cov-report=html
+```
+
+## Tech Stack
+
+| Category | Choice | Version |
+|----------|--------|---------|
+| Package Manager | uv | latest |
+| OpenSearch | OpenSearch | 3.1.0 |
+| Korean Analyzer | Nori | 3.3.0 |
+| Python Client | opensearch-py | 3.1.0 |
+| Embeddings (Local) | FastEmbed | 0.4+ |
+| Embeddings (API) | OpenAI | 1.0+ |
+| Search Method | Hybrid Search | - |
+
+## License
+
+MIT
