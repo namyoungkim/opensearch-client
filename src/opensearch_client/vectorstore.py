@@ -81,7 +81,7 @@ class VectorStore:
         """인덱스와 파이프라인이 없으면 생성"""
         if not self.client.index_exists(self.index_name):
             body = IndexManager.create_hybrid_index_body(
-                text_field=self.text_field,
+                text_fields={self.text_field: "text"},
                 vector_field=self.vector_field,
                 vector_dimension=self.embedder.dimension,
                 use_korean_analyzer=self.use_korean_analyzer
