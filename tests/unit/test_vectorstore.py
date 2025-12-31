@@ -3,6 +3,7 @@
 from unittest.mock import Mock
 
 import pytest
+from opensearchpy.exceptions import NotFoundError
 
 from opensearch_client.vectorstore import SearchResult, VectorStore
 
@@ -15,6 +16,9 @@ class MockEmbedder:
     def embed(self, text: str) -> list:
         return [0.1] * 384
 
+    def embed_batch(self, texts: list[str]) -> list[list[float]]:
+        return [[0.1] * 384 for _ in texts]
+
 
 @pytest.fixture
 def mock_client():
@@ -24,6 +28,10 @@ def mock_client():
     client.create_index.return_value = {"acknowledged": True}
     client.setup_hybrid_pipeline.return_value = {"acknowledged": True}
     client.index_document.return_value = {"_id": "test-id-1"}
+    client.bulk_index.return_value = {
+        "errors": False,
+        "items": [{"index": {"_id": "test-id-1", "status": 201}}],
+    }
     client.refresh.return_value = {}
     return client
 
@@ -66,22 +74,33 @@ class TestVectorStoreAdd:
         result = vector_store.add(["테스트 문서"])
 
         assert result == ["test-id-1"]
-        mock_client.index_document.assert_called_once()
+        mock_client.bulk_index.assert_called_once()
         mock_client.refresh.assert_called_once()
+
+    def test_add_empty_list(self, vector_store, mock_client):
+        result = vector_store.add([])
+
+        assert result == []
+        mock_client.bulk_index.assert_not_called()
 
     def test_add_with_metadata(self, vector_store, mock_client):
         vector_store.add(["테스트 문서"], metadata=[{"category": "test"}])
 
-        call_args = mock_client.index_document.call_args
-        doc = call_args[0][1]
-        assert doc["category"] == "test"
+        call_args = mock_client.bulk_index.call_args
+        documents = call_args[0][1]
+        assert documents[0]["category"] == "test"
 
     def test_add_with_ids(self, vector_store, mock_client):
-        vector_store.add(["테스트 문서"], ids=["custom-id"])
+        mock_client.bulk_index.return_value = {
+            "errors": False,
+            "items": [{"index": {"_id": "custom-id", "status": 201}}],
+        }
+        result = vector_store.add(["테스트 문서"], ids=["custom-id"])
 
-        call_args = mock_client.index_document.call_args
-        doc_id = call_args[0][2]
-        assert doc_id == "custom-id"
+        call_args = mock_client.bulk_index.call_args
+        documents = call_args[0][1]
+        assert documents[0]["_id"] == "custom-id"
+        assert result == ["custom-id"]
 
     def test_add_one(self, vector_store, mock_client):
         result = vector_store.add_one("단일 문서", metadata={"key": "value"})
@@ -89,8 +108,12 @@ class TestVectorStoreAdd:
         assert result == "test-id-1"
 
     def test_add_metadata_length_mismatch_raises(self, vector_store):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="texts와 metadata 길이가 다릅니다"):
             vector_store.add(["문서1", "문서2"], metadata=[{"key": "value"}])
+
+    def test_add_ids_length_mismatch_raises(self, vector_store):
+        with pytest.raises(ValueError, match="texts와 ids 길이가 다릅니다"):
+            vector_store.add(["문서1", "문서2"], ids=["id-1"])
 
 
 class TestVectorStoreSearch:
@@ -137,7 +160,9 @@ class TestVectorStoreDelete:
         mock_client.refresh.assert_called()
 
     def test_delete_ignores_missing(self, vector_store, mock_client):
-        mock_client.delete_document.side_effect = Exception("Not found")
+        mock_client.delete_document.side_effect = NotFoundError(
+            404, "document_missing_exception", {"reason": "Document not found"}
+        )
 
         # Should not raise
         vector_store.delete(["missing-id"])

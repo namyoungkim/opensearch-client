@@ -4,13 +4,17 @@ VectorStore 래퍼 클래스
 간단한 인터페이스로 벡터 저장/검색 제공
 """
 
-import contextlib
+import logging
 from dataclasses import dataclass
 from typing import Any
+
+from opensearchpy.exceptions import NotFoundError, RequestError
 
 from opensearch_client.client import OpenSearchClient
 from opensearch_client.index import IndexManager
 from opensearch_client.semantic_search.embeddings.base import BaseEmbedding
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -90,11 +94,16 @@ class VectorStore:
             )
             self.client.create_index(self.index_name, body)
 
-        # 파이프라인 생성 (이미 있으면 덮어씀)
-        with contextlib.suppress(Exception):
+        # 파이프라인 생성 (이미 있으면 무시)
+        try:
             self.client.setup_hybrid_pipeline(
                 pipeline_id=self._pipeline_id, text_weight=0.3, vector_weight=0.7
             )
+        except RequestError as e:
+            # 리소스 이미 존재하는 경우만 무시
+            if "resource_already_exists" not in str(e).lower():
+                logger.warning("Failed to setup hybrid pipeline: %s", e)
+                raise
 
     def add(
         self,
@@ -113,22 +122,42 @@ class VectorStore:
         Returns:
             저장된 문서 ID 리스트
         """
+        if not texts:
+            return []
+
         if metadata is None:
             metadata = [{}] * len(texts)
 
         if len(metadata) != len(texts):
             raise ValueError("texts와 metadata 길이가 다릅니다")
 
-        doc_ids = []
-        for i, text in enumerate(texts):
+        if ids is not None and len(ids) != len(texts):
+            raise ValueError("texts와 ids 길이가 다릅니다")
+
+        # 배치 임베딩으로 성능 개선
+        vectors = self.embedder.embed_batch(texts)
+
+        # 문서 생성
+        documents = []
+        for i, (text, vector) in enumerate(zip(texts, vectors, strict=True)):
             doc = {
                 self.text_field: text,
-                self.vector_field: self.embedder.embed(text),
+                self.vector_field: vector,
                 **metadata[i],
             }
-            doc_id = ids[i] if ids else None
-            result = self.client.index_document(self.index_name, doc, doc_id)
-            doc_ids.append(result["_id"])
+            if ids:
+                doc["_id"] = ids[i]
+            documents.append(doc)
+
+        # bulk_index 사용
+        id_field = "_id" if ids else None
+        result = self.client.bulk_index(self.index_name, documents, id_field=id_field)
+
+        # 결과에서 문서 ID 추출
+        doc_ids = []
+        for item in result.get("items", []):
+            index_result = item.get("index", {})
+            doc_ids.append(index_result.get("_id", ""))
 
         self.client.refresh(self.index_name)
         return doc_ids
@@ -198,8 +227,10 @@ class VectorStore:
             ids: 삭제할 문서 ID 리스트
         """
         for doc_id in ids:
-            with contextlib.suppress(Exception):
+            try:
                 self.client.delete_document(self.index_name, doc_id)
+            except NotFoundError:
+                pass  # 문서가 없는 경우만 무시
         self.client.refresh(self.index_name)
 
     def clear(self) -> None:
