@@ -113,7 +113,7 @@ for doc_id in ids:
 
 ---
 
-### 2.3 bulk_index 결과 검증
+### 2.3 bulk_index 결과 검증 ✅ 완료
 
 **파일**: `src/opensearch_client/client.py:142-150`
 
@@ -255,7 +255,7 @@ def add_one(
 
 ## 4. 기능 개선
 
-### 4.1 korean_search_query() 필드명 파라미터화
+### 4.1 korean_search_query() 필드명 파라미터화 ✅ 완료
 
 **파일**: `src/opensearch_client/text_search/query_builder.py:170-240`
 
@@ -323,7 +323,7 @@ class AsyncOpenSearchClient:
 
 ## 5. 보안 개선
 
-### 5.1 SSL 인증서 검증 기본값 변경 고려
+### 5.1 SSL 인증서 검증 기본값 변경 고려 ✅ 완료 (문서화)
 
 **파일**: `src/opensearch_client/client.py:25`
 
@@ -350,7 +350,7 @@ def __init__(
 
 ## 6. 테스트 개선
 
-### 6.1 에러 케이스 테스트 추가
+### 6.1 에러 케이스 테스트 추가 ✅ 완료
 
 **현재 상태**:
 - Happy path 테스트 위주
@@ -371,7 +371,7 @@ def __init__(
 | 우선순위 | 항목 |
 |---------|------|
 | **높음** | ~~배치 임베딩 활용~~ ✅, ~~예외 처리 세분화~~ ✅ |
-| **중간** | bulk_index 검증, 필드명 파라미터화, SSL 문서화, 테스트 추가 |
+| **중간** | ~~bulk_index 검증~~ ✅, ~~필드명 파라미터화~~ ✅, ~~SSL 문서화~~ ✅, ~~테스트 추가~~ ✅ |
 | **낮음** | 미사용 코드 정리, 비동기 지원 |
 
 ---
@@ -382,3 +382,4 @@ def __init__(
 |------|--------|------|
 | 2025-12-31 | Claude Code | 초기 작성 |
 | 2025-12-31 | Claude Code | 고우선순위 항목 구현 완료 (1.1, 2.1, 2.2) |
+| 2025-12-31 | Claude Code | 중간 우선순위 항목 구현 완료 (2.3, 4.1, 5.1, 6.1) |
