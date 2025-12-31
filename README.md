@@ -260,10 +260,42 @@ asyncio.run(main())
 
 ## Development
 
+### Setup
+
 ```bash
-# Install dev dependencies
+# Clone repository
+git clone https://github.com/namyoungkim/opensearch-client.git
+cd opensearch-client
+
+# Install dependencies (requires uv)
 uv sync --all-extras
 
+# Setup pre-commit hooks
+uv run pre-commit install
+```
+
+### Code Quality
+
+```bash
+# Lint check
+uv run ruff check .
+
+# Lint with auto-fix
+uv run ruff check --fix .
+
+# Format code
+uv run ruff format .
+
+# Type check
+uv run ty check
+
+# Run all checks (via pre-commit)
+uv run pre-commit run --all-files
+```
+
+### Testing
+
+```bash
 # Run unit tests
 uv run pytest tests/unit -v
 
@@ -280,6 +312,8 @@ uv run pytest --cov=opensearch_client --cov-report=html
 | Category | Choice | Version |
 |----------|--------|---------|
 | Package Manager | uv | latest |
+| Linter/Formatter | ruff | 0.14+ |
+| Type Checker | ty | 0.0.7+ |
 | OpenSearch | OpenSearch | 3.1.0 |
 | Korean Analyzer | Nori | 3.3.0 |
 | Python Client | opensearch-py | 3.1.0 |
