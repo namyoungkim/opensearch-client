@@ -47,9 +47,14 @@ This is a Python client library for OpenSearch with hybrid search support (text 
 
 - **`vectorstore.py`**: High-level `VectorStore` wrapper for simple add/search interface with automatic embedding
 
+- **`async_client.py`**: `AsyncOpenSearchClient` for async/await operations. Requires `[async]` extra.
+
+- **`exceptions.py`**: Custom exceptions (`OpenSearchClientError`, `BulkIndexError`)
+
 ### Key Patterns
 
 - Embeddings are optional: `opensearch-client[openai]` or `opensearch-client[local]` for FastEmbed
+- Async support is optional: `opensearch-client[async]` for `AsyncOpenSearchClient`
 - Hybrid search requires a Search Pipeline set up via `client.setup_hybrid_pipeline()`
 - Integration tests use port 9201 to avoid conflicts (configured via `OPENSEARCH_TEST_PORT` env var)
 - Test markers: `@pytest.mark.integration` for tests requiring OpenSearch
