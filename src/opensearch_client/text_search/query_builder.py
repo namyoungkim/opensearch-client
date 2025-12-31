@@ -154,9 +154,11 @@ class TextQueryBuilder:
     def korean_search_query(
         cls,
         query: str,
+        primary_field: str = "question",
+        secondary_field: str = "answer",
         required_text: str | None = None,
-        boost_question: float = 2.0,
-        boost_answer: float = 1.0,
+        boost_primary: float = 2.0,
+        boost_secondary: float = 1.0,
         keyword_match: bool = True,
         min_should_match: str = "50%",
         required_text_boost: float = 1.5,
@@ -168,9 +170,11 @@ class TextQueryBuilder:
 
         Args:
             query: 검색 질의
+            primary_field: 주 검색 필드 (기본: "question")
+            secondary_field: 보조 검색 필드 (기본: "answer")
             required_text: 결과에 반드시 포함되어야 할 텍스트
-            boost_question: question 필드 가중치
-            boost_answer: answer 필드 가중치
+            boost_primary: 주 필드 가중치
+            boost_secondary: 보조 필드 가중치
             keyword_match: 키워드 매치 모드 (True: OR, False: AND)
             min_should_match: 최소 일치 비율
             required_text_boost: 필수 텍스트 가중치
@@ -180,17 +184,20 @@ class TextQueryBuilder:
         """
         # should 절: 기본 검색 쿼리
         should_clauses = [
-            # 멀티 매치 (question 가중치 높음)
+            # 멀티 매치 (primary 가중치 높음)
             cls.multi_match(
                 query=query,
-                fields=["question", "answer"],
-                boost_map={"question": boost_question, "answer": boost_answer},
+                fields=[primary_field, secondary_field],
+                boost_map={
+                    primary_field: boost_primary,
+                    secondary_field: boost_secondary,
+                },
                 fuzziness="AUTO",
             ),
-            # answer 구문 일치 (가장 높은 가중치)
-            cls.match_phrase("answer", query, boost=2.5),
-            # question 구문 일치
-            cls.match_phrase("question", query, boost=2.0),
+            # secondary 구문 일치 (가장 높은 가중치)
+            cls.match_phrase(secondary_field, query, boost=2.5),
+            # primary 구문 일치
+            cls.match_phrase(primary_field, query, boost=2.0),
         ]
 
         # must 절: 필수 조건
@@ -204,7 +211,7 @@ class TextQueryBuilder:
                 {
                     "multi_match": {
                         "query": required_text,
-                        "fields": ["answer^2.0", "question"],
+                        "fields": [f"{secondary_field}^2.0", primary_field],
                         "operator": operator,
                         "minimum_should_match": min_should_match,
                         "fuzziness": "AUTO",
@@ -215,7 +222,9 @@ class TextQueryBuilder:
 
             # 필수 텍스트 구문 일치도 should에 추가
             should_clauses.append(
-                cls.match_phrase("answer", required_text, boost=required_text_boost * 2)
+                cls.match_phrase(
+                    secondary_field, required_text, boost=required_text_boost * 2
+                )
             )
 
         return cls.bool_query(

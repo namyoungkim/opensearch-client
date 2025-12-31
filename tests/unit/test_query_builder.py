@@ -127,13 +127,26 @@ class TestTextQueryBuilder:
     def test_korean_search_query_boost_settings(self):
         """boost 설정 한국어 검색 쿼리"""
         query = TextQueryBuilder.korean_search_query(
-            query="한국어 검색", boost_question=3.0, boost_answer=1.5
+            query="한국어 검색", boost_primary=3.0, boost_secondary=1.5
         )
 
         # multi_match 쿼리의 fields에서 boost 확인
         multi_match = query["bool"]["should"][0]
         assert "question^3.0" in multi_match["multi_match"]["fields"]
         assert "answer^1.5" in multi_match["multi_match"]["fields"]
+
+    def test_korean_search_query_custom_fields(self):
+        """커스텀 필드 한국어 검색 쿼리"""
+        query = TextQueryBuilder.korean_search_query(
+            query="한국어 검색",
+            primary_field="title",
+            secondary_field="content",
+        )
+
+        # multi_match 쿼리의 fields에서 커스텀 필드 확인
+        multi_match = query["bool"]["should"][0]
+        assert "title" in str(multi_match["multi_match"]["fields"])
+        assert "content" in str(multi_match["multi_match"]["fields"])
 
     def test_build_search_body(self):
         """검색 본문 생성"""

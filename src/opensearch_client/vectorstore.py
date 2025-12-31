@@ -4,6 +4,7 @@ VectorStore 래퍼 클래스
 간단한 인터페이스로 벡터 저장/검색 제공
 """
 
+import contextlib
 import logging
 from dataclasses import dataclass
 from typing import Any
@@ -227,10 +228,8 @@ class VectorStore:
             ids: 삭제할 문서 ID 리스트
         """
         for doc_id in ids:
-            try:
+            with contextlib.suppress(NotFoundError):
                 self.client.delete_document(self.index_name, doc_id)
-            except NotFoundError:
-                pass  # 문서가 없는 경우만 무시
         self.client.refresh(self.index_name)
 
     def clear(self) -> None:

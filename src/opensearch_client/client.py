@@ -37,6 +37,24 @@ class OpenSearchClient:
             use_ssl: SSL 사용 여부
             verify_certs: 인증서 검증 여부
             **kwargs: 추가 OpenSearch 클라이언트 옵션
+
+        Warning:
+            보안 권장사항:
+            - 프로덕션 환경에서는 반드시 verify_certs=True 사용을 권장합니다.
+            - verify_certs=False는 개발/테스트 환경에서만 사용하세요.
+            - SSL 인증서 검증을 비활성화하면 MITM(중간자) 공격에 취약해집니다.
+
+        Example:
+            개발 환경:
+            >>> client = OpenSearchClient(host="localhost", use_ssl=False)
+
+            프로덕션 환경 (권장):
+            >>> client = OpenSearchClient(
+            ...     host="opensearch.example.com",
+            ...     use_ssl=True,
+            ...     verify_certs=True,
+            ...     ca_certs="/path/to/ca-bundle.crt",  # CA 인증서 경로
+            ... )
         """
         auth = (user, password) if user and password else None
 
@@ -119,6 +137,7 @@ class OpenSearchClient:
         index_name: str,
         documents: list[dict[str, Any]],
         id_field: str | None = None,
+        raise_on_error: bool = False,
     ) -> dict[str, Any]:
         """
         벌크 인덱싱
@@ -127,10 +146,16 @@ class OpenSearchClient:
             index_name: 인덱스 이름
             documents: 인덱싱할 문서 리스트
             id_field: 문서 ID로 사용할 필드명 (선택)
+            raise_on_error: 부분 실패 시 예외 발생 여부
 
         Returns:
             벌크 인덱싱 결과
+
+        Raises:
+            BulkIndexError: raise_on_error=True이고 일부 문서 인덱싱 실패 시
         """
+        from opensearch_client.exceptions import BulkIndexError
+
         actions = []
         for doc in documents:
             action = {"index": {"_index": index_name}}
@@ -139,7 +164,20 @@ class OpenSearchClient:
             actions.append(action)
             actions.append(doc)
 
-        return self._client.bulk(body=actions)
+        result = self._client.bulk(body=actions)
+
+        if raise_on_error and result.get("errors"):
+            failed_items = [
+                item
+                for item in result.get("items", [])
+                if "error" in item.get("index", {})
+            ]
+            raise BulkIndexError(
+                f"Failed to index {len(failed_items)} of {len(documents)} documents",
+                failed_items,
+            )
+
+        return result
 
     def get_document(self, index_name: str, doc_id: str) -> dict[str, Any]:
         """문서 조회"""
