@@ -8,6 +8,32 @@ import os
 
 import pytest
 
+from opensearch_client.semantic_search.embeddings.base import BaseEmbedding
+
+
+class MockEmbedder(BaseEmbedding):
+    """
+    테스트용 Mock 임베더
+
+    실제 임베딩 모델 없이 테스트하기 위한 클래스
+    """
+
+    def __init__(self, dim: int = 384):
+        self._dimension = dim
+
+    @property
+    def dimension(self) -> int:
+        return self._dimension
+
+    def embed(self, text: str) -> list[float]:
+        """고정된 벡터 반환"""
+        return [0.1] * self._dimension
+
+    def embed_batch(self, texts: list[str]) -> list[list[float]]:
+        """각 텍스트에 대해 고정된 벡터 반환"""
+        return [[0.1] * self._dimension for _ in texts]
+
+
 # 통합 테스트용 OpenSearch 설정
 OPENSEARCH_TEST_HOST = os.getenv("OPENSEARCH_TEST_HOST", "localhost")
 OPENSEARCH_TEST_PORT = int(os.getenv("OPENSEARCH_TEST_PORT", "9201"))
@@ -17,6 +43,18 @@ def pytest_configure(config):
     """pytest 마커 등록"""
     config.addinivalue_line("markers", "integration: 통합 테스트 (OpenSearch 필요)")
     config.addinivalue_line("markers", "e2e: E2E 테스트 (전체 파이프라인)")
+
+
+@pytest.fixture
+def mock_embedder():
+    """테스트용 Mock 임베더 (384차원)"""
+    return MockEmbedder(dim=384)
+
+
+@pytest.fixture
+def mock_embedder_1536():
+    """테스트용 Mock 임베더 (1536차원, OpenAI 호환)"""
+    return MockEmbedder(dim=1536)
 
 
 @pytest.fixture

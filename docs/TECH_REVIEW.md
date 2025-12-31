@@ -142,6 +142,15 @@ Combined Results
 | opensearch-dsl-py | - | ❌ Deprecated (opensearch-py로 통합) |
 | opensearch-py-ml | 최신 | 선택 (ML 기능 필요시) |
 
+### 비동기 HTTP 클라이언트
+
+| 패키지 | 버전 | 용도 |
+|--------|------|------|
+| **aiohttp** | 3.0+ | AsyncOpenSearchClient HTTP 전송 레이어 |
+
+**참고:** `opensearch-py`의 `AsyncOpenSearch`는 내부적으로 `aiohttp`를 사용합니다.
+설치: `uv add opensearch-client[async]`
+
 ### 임베딩 라이브러리 (2025년 트렌드)
 
 | 라이브러리 | 특징 | 권장도 | 모델 예시 |
@@ -267,4 +276,4 @@ spec:
 
 ---
 
-*Last Updated: 2025-12-26*
+*Last Updated: 2025-12-31*

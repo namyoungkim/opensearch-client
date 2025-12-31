@@ -1,6 +1,7 @@
 # OpenSearch Client
 
 [![CI](https://github.com/namyoungkim/opensearch-client/actions/workflows/ci.yml/badge.svg)](https://github.com/namyoungkim/opensearch-client/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/namyoungkim/opensearch-client/graph/badge.svg)](https://codecov.io/gh/namyoungkim/opensearch-client)
 
 OpenSearch client with hybrid search support for Korean text.
 
@@ -299,12 +300,102 @@ uv run pre-commit run --all-files
 # Run unit tests
 uv run pytest tests/unit -v
 
-# Run integration tests (requires OpenSearch)
+# Run integration tests (requires OpenSearch on port 9201)
 docker compose -f docker-compose.test.yml up -d
 uv run pytest tests/integration -v
 
-# Run all tests with coverage
+# Run all tests with coverage (requires 70% minimum)
 uv run pytest --cov=opensearch_client --cov-report=html
+```
+
+**Note:** Integration tests use port 9201 to avoid conflicts with production OpenSearch (default 9200).
+
+## Troubleshooting
+
+### Connection Issues
+
+**Port conflicts:**
+```bash
+# Integration tests use port 9201, not 9200
+# Override with environment variable if needed
+OPENSEARCH_TEST_PORT=9201 uv run pytest tests/integration -v
+```
+
+**SSL/TLS errors:**
+```python
+# Development only (not recommended for production)
+client = OpenSearchClient(use_ssl=False, verify_certs=False)
+
+# Production (recommended)
+client = OpenSearchClient(
+    use_ssl=True,
+    verify_certs=True,
+    ca_certs="/path/to/ca.pem"
+)
+```
+
+### Docker Issues
+
+**Container not starting:**
+```bash
+# Check logs
+docker compose -f docker-compose.test.yml logs
+
+# Reset and restart
+docker compose -f docker-compose.test.yml down -v
+docker compose -f docker-compose.test.yml up -d
+```
+
+**Memory errors:**
+```bash
+# Increase Docker memory limit (recommended: 4GB+)
+# Or adjust in docker-compose.test.yml:
+# environment:
+#   - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+```
+
+## Performance Tuning
+
+### Vector Search (k-NN)
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `ef_search` | 100 | Higher = better accuracy, slower search |
+| `ef_construction` | 128 | Higher = better index quality, slower build |
+| `m` | 16 | Number of connections per node |
+
+```python
+# High accuracy configuration
+body = IndexManager.create_vector_index_body(
+    vector_dimension=384,
+    ef_construction=256,
+    m=32
+)
+client.create_index("high-accuracy-index", body)
+```
+
+### Hybrid Search Weights
+
+| Use Case | Text Weight | Vector Weight |
+|----------|-------------|---------------|
+| Keyword-focused | 0.7 | 0.3 |
+| Semantic-focused | 0.3 | 0.7 |
+| Balanced | 0.5 | 0.5 |
+
+```python
+client.setup_hybrid_pipeline(
+    pipeline_id="balanced-pipeline",
+    text_weight=0.5,
+    vector_weight=0.5
+)
+```
+
+### Batch Operations
+
+```python
+# Efficient bulk embedding and indexing
+embeddings = embedder.embed_batch(texts)  # Batch embedding
+client.bulk_index("my-index", documents)   # Bulk indexing
 ```
 
 ## Tech Stack
