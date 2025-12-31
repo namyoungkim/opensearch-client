@@ -21,9 +21,11 @@ uv run pytest tests/unit/test_query_builder.py::test_function_name -v
 docker compose -f docker-compose.test.yml up -d
 uv run pytest tests/integration -v
 
-# Run all tests with coverage
+# Run all tests with coverage (70% minimum required)
 uv run pytest --cov=opensearch_client --cov-report=html
 ```
+
+> 테스트 및 CI/CD에 대한 자세한 내용은 [docs/TESTING.md](docs/TESTING.md) 참조
 
 ## Architecture
 
