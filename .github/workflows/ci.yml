@@ -77,8 +77,14 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     if: always()
+    permissions:
+      contents: read
+      actions: read
+      checks: write
 
     steps:
+      - uses: actions/checkout@v4
+
       - name: Download test results
         uses: actions/download-artifact@v4
         with:
