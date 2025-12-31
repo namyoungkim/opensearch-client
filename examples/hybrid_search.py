@@ -53,7 +53,7 @@ def main():
 
     # 텍스트 + 벡터 필드가 있는 하이브리드 인덱스
     body = IndexManager.create_hybrid_index_body(
-        text_field="content",
+        text_fields={"content": "text"},
         vector_field="embedding",
         vector_dimension=384,
         use_korean_analyzer=True,

@@ -84,7 +84,7 @@ def hybrid_test_index(opensearch_client, test_index_name):
 
     # 하이브리드 인덱스 생성
     body = IndexManager.create_hybrid_index_body(
-        text_field="text",
+        text_fields={"text": "text"},
         vector_field="vector",
         vector_dimension=384,
         use_korean_analyzer=False,

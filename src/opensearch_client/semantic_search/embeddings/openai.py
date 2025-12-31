@@ -76,13 +76,15 @@ class OpenAIEmbedding(BaseEmbedding):
         Returns:
             벡터 (float 리스트)
         """
-        kwargs = {"input": text, "model": self._model_name}
-
         # text-embedding-3-* 모델은 dimensions 파라미터 지원
         if self._dimensions and self._model_name.startswith("text-embedding-3"):
-            kwargs["dimensions"] = self._dimensions
-
-        response = self._client.embeddings.create(**kwargs)
+            response = self._client.embeddings.create(
+                input=text, model=self._model_name, dimensions=self._dimensions
+            )
+        else:
+            response = self._client.embeddings.create(
+                input=text, model=self._model_name
+            )
         return response.data[0].embedding
 
     def embed_batch(self, texts: list[str]) -> list[list[float]]:
@@ -95,12 +97,15 @@ class OpenAIEmbedding(BaseEmbedding):
         Returns:
             벡터 리스트
         """
-        kwargs = {"input": texts, "model": self._model_name}
-
+        # text-embedding-3-* 모델은 dimensions 파라미터 지원
         if self._dimensions and self._model_name.startswith("text-embedding-3"):
-            kwargs["dimensions"] = self._dimensions
-
-        response = self._client.embeddings.create(**kwargs)
+            response = self._client.embeddings.create(
+                input=texts, model=self._model_name, dimensions=self._dimensions
+            )
+        else:
+            response = self._client.embeddings.create(
+                input=texts, model=self._model_name
+            )
 
         # 인덱스 순서대로 정렬
         sorted_embeddings = sorted(response.data, key=lambda x: x.index)
