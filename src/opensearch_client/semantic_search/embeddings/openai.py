@@ -4,6 +4,8 @@ OpenAI 임베딩 구현
 OpenAI API를 사용한 임베딩
 """
 
+from typing import ClassVar
+
 from opensearch_client.semantic_search.embeddings.base import BaseEmbedding
 
 
@@ -17,8 +19,8 @@ class OpenAIEmbedding(BaseEmbedding):
     - text-embedding-ada-002 (1536 dim, legacy)
     """
 
-    DEFAULT_MODEL = "text-embedding-3-small"
-    MODEL_DIMENSIONS = {
+    DEFAULT_MODEL: ClassVar[str] = "text-embedding-3-small"
+    MODEL_DIMENSIONS: ClassVar[dict[str, int]] = {
         "text-embedding-3-small": 1536,
         "text-embedding-3-large": 3072,
         "text-embedding-ada-002": 1536,
@@ -43,11 +45,11 @@ class OpenAIEmbedding(BaseEmbedding):
         """
         try:
             from openai import OpenAI
-        except ImportError:
+        except ImportError as err:
             raise ImportError(
                 "openai is not installed. "
                 "Install it with: uv add opensearch-client[openai]"
-            )
+            ) from err
 
         self._model_name = model_name or self.DEFAULT_MODEL
         self._dimensions = dimensions

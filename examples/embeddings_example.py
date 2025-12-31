@@ -116,7 +116,7 @@ def semantic_search_example(embedder, client=None):
     embeddings = embedder.embed_batch(documents)
 
     # 인덱싱
-    for i, (text, embedding) in enumerate(zip(documents, embeddings)):
+    for i, (text, embedding) in enumerate(zip(documents, embeddings, strict=True)):
         client.index_document(
             index_name, {"text": text, "embedding": embedding}, doc_id=f"doc-{i}"
         )

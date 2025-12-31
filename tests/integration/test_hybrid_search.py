@@ -5,6 +5,8 @@ OpenSearch 연결이 필요합니다.
 docker-compose.test.yml로 테스트 환경을 시작하세요.
 """
 
+import contextlib
+
 import pytest
 
 from opensearch_client import IndexManager
@@ -42,11 +44,9 @@ class TestHybridSearch:
         """테스트용 Search Pipeline 생성/삭제"""
         pipeline_id = "test-hybrid-pipeline"
 
-        try:
-            # 기존 파이프라인 삭제 시도
+        # 기존 파이프라인 삭제 시도
+        with contextlib.suppress(Exception):
             opensearch_client.delete_search_pipeline(pipeline_id)
-        except Exception:
-            pass
 
         # 파이프라인 생성
         opensearch_client.setup_hybrid_pipeline(
@@ -56,10 +56,8 @@ class TestHybridSearch:
         yield pipeline_id
 
         # 정리
-        try:
+        with contextlib.suppress(Exception):
             opensearch_client.delete_search_pipeline(pipeline_id)
-        except Exception:
-            pass
 
     def test_create_hybrid_index(self, opensearch_client, hybrid_index):
         """하이브리드 인덱스 생성 확인"""

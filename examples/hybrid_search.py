@@ -5,6 +5,8 @@
 OpenSearch 2.10+ 필요 (Search Pipeline 지원)
 """
 
+import contextlib
+
 from opensearch_client import (
     HybridQueryBuilder,
     IndexManager,
@@ -60,10 +62,8 @@ def main():
     print(f"하이브리드 인덱스 '{index_name}' 생성 완료")
 
     # 3. Search Pipeline 설정
-    try:
+    with contextlib.suppress(Exception):
         client.delete_search_pipeline(pipeline_id)
-    except Exception:
-        pass
 
     client.setup_hybrid_pipeline(
         pipeline_id=pipeline_id,
@@ -101,7 +101,7 @@ def main():
     embeddings = create_sample_embeddings(contents)
 
     # 임베딩 추가
-    for doc, emb in zip(documents, embeddings):
+    for doc, emb in zip(documents, embeddings, strict=True):
         doc["embedding"] = emb
 
     # 5. 문서 인덱싱
@@ -141,10 +141,8 @@ def main():
     # 7. RRF (Reciprocal Rank Fusion) 파이프라인 예제
     rrf_pipeline_id = "example-rrf-pipeline"
 
-    try:
+    with contextlib.suppress(Exception):
         client.delete_search_pipeline(rrf_pipeline_id)
-    except Exception:
-        pass
 
     # RRF는 OpenSearch 2.19+ 에서 지원
     # client.setup_hybrid_pipeline(

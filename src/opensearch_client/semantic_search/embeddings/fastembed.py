@@ -4,6 +4,8 @@ FastEmbed 임베딩 구현
 로컬에서 실행되는 빠른 임베딩 모델
 """
 
+from typing import ClassVar
+
 from opensearch_client.semantic_search.embeddings.base import BaseEmbedding
 
 
@@ -20,8 +22,8 @@ class FastEmbedEmbedding(BaseEmbedding):
     - intfloat/multilingual-e5-base (768 dim, 다국어)
     """
 
-    DEFAULT_MODEL = "BAAI/bge-small-en-v1.5"
-    MODEL_DIMENSIONS = {
+    DEFAULT_MODEL: ClassVar[str] = "BAAI/bge-small-en-v1.5"
+    MODEL_DIMENSIONS: ClassVar[dict[str, int]] = {
         "BAAI/bge-small-en-v1.5": 384,
         "BAAI/bge-base-en-v1.5": 768,
         "BAAI/bge-large-en-v1.5": 1024,
@@ -50,11 +52,11 @@ class FastEmbedEmbedding(BaseEmbedding):
         """
         try:
             from fastembed import TextEmbedding
-        except ImportError:
+        except ImportError as err:
             raise ImportError(
                 "fastembed is not installed. "
                 "Install it with: uv add opensearch-client[local]"
-            )
+            ) from err
 
         self._model_name = model_name or self.DEFAULT_MODEL
         self._dimension = self.MODEL_DIMENSIONS.get(self._model_name, 384)
