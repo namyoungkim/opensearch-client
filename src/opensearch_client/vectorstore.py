@@ -4,8 +4,8 @@ VectorStore 래퍼 클래스
 간단한 인터페이스로 벡터 저장/검색 제공
 """
 
-from typing import Any, Dict, List, Optional
 from dataclasses import dataclass
+from typing import Any
 
 from opensearch_client.client import OpenSearchClient
 from opensearch_client.index import IndexManager
@@ -15,9 +15,10 @@ from opensearch_client.semantic_search.embeddings.base import BaseEmbedding
 @dataclass
 class SearchResult:
     """검색 결과"""
+
     text: str
     score: float
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
     id: str
 
 
@@ -52,7 +53,7 @@ class VectorStore:
         text_field: str = "content",
         vector_field: str = "embedding",
         use_korean_analyzer: bool = True,
-        auto_create: bool = True
+        auto_create: bool = True,
     ):
         """
         VectorStore 초기화
@@ -84,26 +85,24 @@ class VectorStore:
                 text_fields={self.text_field: "text"},
                 vector_field=self.vector_field,
                 vector_dimension=self.embedder.dimension,
-                use_korean_analyzer=self.use_korean_analyzer
+                use_korean_analyzer=self.use_korean_analyzer,
             )
             self.client.create_index(self.index_name, body)
 
         # 파이프라인 생성 (이미 있으면 덮어씀)
         try:
             self.client.setup_hybrid_pipeline(
-                pipeline_id=self._pipeline_id,
-                text_weight=0.3,
-                vector_weight=0.7
+                pipeline_id=self._pipeline_id, text_weight=0.3, vector_weight=0.7
             )
         except Exception:
             pass  # 이미 존재하는 경우 무시
 
     def add(
         self,
-        texts: List[str],
-        metadata: Optional[List[Dict[str, Any]]] = None,
-        ids: Optional[List[str]] = None
-    ) -> List[str]:
+        texts: list[str],
+        metadata: list[dict[str, Any]] | None = None,
+        ids: list[str] | None = None,
+    ) -> list[str]:
         """
         텍스트 추가 (자동 임베딩)
 
@@ -126,7 +125,7 @@ class VectorStore:
             doc = {
                 self.text_field: text,
                 self.vector_field: self.embedder.embed(text),
-                **metadata[i]
+                **metadata[i],
             }
             doc_id = ids[i] if ids else None
             result = self.client.index_document(self.index_name, doc, doc_id)
@@ -136,10 +135,7 @@ class VectorStore:
         return doc_ids
 
     def add_one(
-        self,
-        text: str,
-        metadata: Optional[Dict[str, Any]] = None,
-        id: Optional[str] = None
+        self, text: str, metadata: dict[str, Any] | None = None, id: str | None = None
     ) -> str:
         """
         단일 텍스트 추가
@@ -156,11 +152,8 @@ class VectorStore:
         return ids[0]
 
     def search(
-        self,
-        query: str,
-        k: int = 5,
-        filter: Optional[Dict[str, Any]] = None
-    ) -> List[SearchResult]:
+        self, query: str, k: int = 5, filter: dict[str, Any] | None = None
+    ) -> list[SearchResult]:
         """
         유사도 검색
 
@@ -181,7 +174,7 @@ class VectorStore:
             vector_field=self.vector_field,
             k=k,
             size=k,
-            filter=filter
+            filter=filter,
         )
 
         return [
@@ -189,15 +182,16 @@ class VectorStore:
                 text=hit["_source"].get(self.text_field, ""),
                 score=hit["_score"],
                 metadata={
-                    k: v for k, v in hit["_source"].items()
+                    k: v
+                    for k, v in hit["_source"].items()
                     if k not in (self.text_field, self.vector_field)
                 },
-                id=hit["_id"]
+                id=hit["_id"],
             )
             for hit in results["hits"]["hits"]
         ]
 
-    def delete(self, ids: List[str]) -> None:
+    def delete(self, ids: list[str]) -> None:
         """
         문서 삭제
 
@@ -220,7 +214,6 @@ class VectorStore:
     def count(self) -> int:
         """저장된 문서 수 반환"""
         result = self.client.search(
-            self.index_name,
-            {"query": {"match_all": {}}, "size": 0}
+            self.index_name, {"query": {"match_all": {}}, "size": 0}
         )
         return result["hits"]["total"]["value"]

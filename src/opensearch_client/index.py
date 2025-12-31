@@ -4,7 +4,7 @@
 텍스트, 벡터, 하이브리드 인덱스 생성 및 관리
 """
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 class IndexManager:
@@ -15,7 +15,7 @@ class IndexManager:
     """
 
     @staticmethod
-    def get_korean_analyzer_settings() -> Dict[str, Any]:
+    def get_korean_analyzer_settings() -> dict[str, Any]:
         """
         한국어 (Nori) 분석기 설정 반환
 
@@ -28,28 +28,27 @@ class IndexManager:
                     "korean": {
                         "type": "custom",
                         "tokenizer": "nori_tokenizer",
-                        "filter": ["nori_part_of_speech"]
+                        "filter": ["nori_part_of_speech"],
                     },
                     "korean_search": {
                         "type": "custom",
                         "tokenizer": "nori_tokenizer",
-                        "filter": ["nori_readingform"]
-                    }
+                        "filter": ["nori_readingform"],
+                    },
                 },
                 "tokenizer": {
                     "nori_tokenizer": {
                         "type": "nori_tokenizer",
-                        "decompound_mode": "mixed"
+                        "decompound_mode": "mixed",
                     }
-                }
+                },
             }
         }
 
     @staticmethod
     def get_text_index_mapping(
-        text_fields: Optional[Dict[str, str]] = None,
-        analyzer: str = "korean"
-    ) -> Dict[str, Any]:
+        text_fields: dict[str, str] | None = None, analyzer: str = "korean"
+    ) -> dict[str, Any]:
         """
         텍스트 검색용 인덱스 매핑 생성
 
@@ -61,29 +60,24 @@ class IndexManager:
             인덱스 매핑 설정
         """
         if text_fields is None:
-            text_fields = {
-                "title": "text",
-                "question": "text",
-                "answer": "text"
-            }
+            text_fields = {"title": "text", "question": "text", "answer": "text"}
 
         properties = {}
         for field_name, field_type in text_fields.items():
             if field_type == "text":
-                properties[field_name] = {
-                    "type": "text",
-                    "analyzer": analyzer
-                }
+                properties[field_name] = {"type": "text", "analyzer": analyzer}
             else:
                 properties[field_name] = {"type": field_type}
 
         # 기본 메타데이터 필드 추가
-        properties.update({
-            "source_id": {"type": "keyword"},
-            "source_path": {"type": "keyword"},
-            "file_type": {"type": "keyword"},
-            "created_at": {"type": "date"}
-        })
+        properties.update(
+            {
+                "source_id": {"type": "keyword"},
+                "source_path": {"type": "keyword"},
+                "file_type": {"type": "keyword"},
+                "created_at": {"type": "date"},
+            }
+        )
 
         return {"properties": properties}
 
@@ -93,8 +87,8 @@ class IndexManager:
         space_type: str = "cosinesimil",
         engine: str = "lucene",
         ef_construction: int = 128,
-        m: int = 16
-    ) -> Dict[str, Any]:
+        m: int = 16,
+    ) -> dict[str, Any]:
         """
         k-NN 벡터 인덱스 설정 반환
 
@@ -108,12 +102,7 @@ class IndexManager:
         Returns:
             k-NN 인덱스 설정
         """
-        return {
-            "index": {
-                "knn": True,
-                "knn.algo_param.ef_search": 100
-            }
-        }
+        return {"index": {"knn": True, "knn.algo_param.ef_search": 100}}
 
     @staticmethod
     def get_knn_field_mapping(
@@ -122,8 +111,8 @@ class IndexManager:
         space_type: str = "cosinesimil",
         engine: str = "lucene",
         ef_construction: int = 128,
-        m: int = 16
-    ) -> Dict[str, Any]:
+        m: int = 16,
+    ) -> dict[str, Any]:
         """
         k-NN 벡터 필드 매핑 생성
 
@@ -146,11 +135,8 @@ class IndexManager:
                     "name": "hnsw",
                     "space_type": space_type,
                     "engine": engine,
-                    "parameters": {
-                        "ef_construction": ef_construction,
-                        "m": m
-                    }
-                }
+                    "parameters": {"ef_construction": ef_construction, "m": m},
+                },
             }
         }
 
@@ -159,11 +145,11 @@ class IndexManager:
         cls,
         vector_dimension: int = 1536,
         text_analyzer: str = "korean",
-        text_fields: Optional[Dict[str, str]] = None,
+        text_fields: dict[str, str] | None = None,
         vector_field: str = "vector",
         space_type: str = "cosinesimil",
-        use_korean_analyzer: bool = True
-    ) -> Dict[str, Any]:
+        use_korean_analyzer: bool = True,
+    ) -> dict[str, Any]:
         """
         하이브리드 검색용 인덱스 설정 생성
 
@@ -184,7 +170,7 @@ class IndexManager:
         if use_korean_analyzer:
             settings = {
                 **cls.get_korean_analyzer_settings(),
-                **cls.get_knn_index_settings(vector_dimension)
+                **cls.get_knn_index_settings(vector_dimension),
             }
         else:
             settings = cls.get_knn_index_settings(vector_dimension)
@@ -196,18 +182,15 @@ class IndexManager:
         )
         text_mapping["properties"].update(vector_mapping)
 
-        return {
-            "settings": settings,
-            "mappings": text_mapping
-        }
+        return {"settings": settings, "mappings": text_mapping}
 
     @classmethod
     def create_text_index_body(
         cls,
         text_field: str = "content",
         use_korean_analyzer: bool = True,
-        additional_fields: Optional[Dict[str, str]] = None
-    ) -> Dict[str, Any]:
+        additional_fields: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
         """
         텍스트 검색용 인덱스 설정 생성
 
@@ -229,7 +212,7 @@ class IndexManager:
 
         return {
             "settings": settings,
-            "mappings": cls.get_text_index_mapping(text_fields, analyzer)
+            "mappings": cls.get_text_index_mapping(text_fields, analyzer),
         }
 
     @classmethod
@@ -237,8 +220,8 @@ class IndexManager:
         cls,
         vector_field: str = "vector",
         vector_dimension: int = 1536,
-        space_type: str = "cosinesimil"
-    ) -> Dict[str, Any]:
+        space_type: str = "cosinesimil",
+    ) -> dict[str, Any]:
         """
         벡터 검색용 인덱스 설정 생성
 
@@ -257,10 +240,5 @@ class IndexManager:
 
         return {
             "settings": settings,
-            "mappings": {
-                "properties": {
-                    "text": {"type": "text"},
-                    **vector_mapping
-                }
-            }
+            "mappings": {"properties": {"text": {"type": "text"}, **vector_mapping}},
         }

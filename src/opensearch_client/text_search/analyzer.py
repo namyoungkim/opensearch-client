@@ -4,15 +4,16 @@
 한국어 (Nori), 영어 등 다양한 언어 분석기 설정 제공
 """
 
-from typing import Any, Dict, List, Optional
 from enum import Enum
+from typing import Any
 
 
 class DecompoundMode(str, Enum):
     """Nori 토크나이저 복합어 분해 모드"""
-    NONE = "none"       # 복합어 분해 안함
-    DISCARD = "discard" # 복합어만 버리고 분해된 토큰만 유지
-    MIXED = "mixed"     # 복합어와 분해된 토큰 모두 유지
+
+    NONE = "none"  # 복합어 분해 안함
+    DISCARD = "discard"  # 복합어만 버리고 분해된 토큰만 유지
+    MIXED = "mixed"  # 복합어와 분해된 토큰 모두 유지
 
 
 class AnalyzerConfig:
@@ -26,9 +27,9 @@ class AnalyzerConfig:
     def korean_analyzer(
         name: str = "korean",
         decompound_mode: DecompoundMode = DecompoundMode.MIXED,
-        user_dictionary: Optional[str] = None,
-        stoptags: Optional[List[str]] = None
-    ) -> Dict[str, Any]:
+        user_dictionary: str | None = None,
+        stoptags: list[str] | None = None,
+    ) -> dict[str, Any]:
         """
         한국어 (Nori) 분석기 설정
 
@@ -42,9 +43,9 @@ class AnalyzerConfig:
             분석기 설정
         """
         # 기본 토크나이저 설정
-        tokenizer_config: Dict[str, Any] = {
+        tokenizer_config: dict[str, Any] = {
             "type": "nori_tokenizer",
-            "decompound_mode": decompound_mode.value
+            "decompound_mode": decompound_mode.value,
         }
 
         if user_dictionary:
@@ -59,46 +60,45 @@ class AnalyzerConfig:
 
         return {
             "analysis": {
-                "tokenizer": {
-                    f"{name}_tokenizer": tokenizer_config
-                },
+                "tokenizer": {f"{name}_tokenizer": tokenizer_config},
                 "filter": {
                     "nori_stoptags": {
                         "type": "nori_part_of_speech",
-                        "stoptags": stoptags or [
-                            "E",   # 어미
+                        "stoptags": stoptags
+                        or [
+                            "E",  # 어미
                             "IC",  # 감탄사
-                            "J",   # 조사
-                            "MAG", # 일반 부사
-                            "MAJ", # 접속 부사
+                            "J",  # 조사
+                            "MAG",  # 일반 부사
+                            "MAJ",  # 접속 부사
                             "MM",  # 관형사
                             "SP",  # 공백
-                            "SSC", # 닫는 괄호
-                            "SSO", # 여는 괄호
+                            "SSC",  # 닫는 괄호
+                            "SSO",  # 여는 괄호
                             "SC",  # 구분자
                             "SE",  # 생략부호
-                            "XPN", # 접두사
-                            "XSA", # 형용사 파생 접미사
-                            "XSN", # 명사 파생 접미사
-                            "XSV", # 동사 파생 접미사
-                            "UNA", # 분석 불가
+                            "XPN",  # 접두사
+                            "XSA",  # 형용사 파생 접미사
+                            "XSN",  # 명사 파생 접미사
+                            "XSV",  # 동사 파생 접미사
+                            "UNA",  # 분석 불가
                             "NA",  # 분석 불가
-                            "VSV"  # 분석 불가
-                        ]
+                            "VSV",  # 분석 불가
+                        ],
                     }
                 },
                 "analyzer": {
                     name: {
                         "type": "custom",
                         "tokenizer": f"{name}_tokenizer",
-                        "filter": filters
+                        "filter": filters,
                     }
-                }
+                },
             }
         }
 
     @staticmethod
-    def standard_analyzer(name: str = "standard_custom") -> Dict[str, Any]:
+    def standard_analyzer(name: str = "standard_custom") -> dict[str, Any]:
         """
         표준 분석기 설정 (영어 등)
 
@@ -114,14 +114,14 @@ class AnalyzerConfig:
                     name: {
                         "type": "custom",
                         "tokenizer": "standard",
-                        "filter": ["lowercase", "asciifolding"]
+                        "filter": ["lowercase", "asciifolding"],
                     }
                 }
             }
         }
 
     @staticmethod
-    def whitespace_analyzer(name: str = "whitespace_custom") -> Dict[str, Any]:
+    def whitespace_analyzer(name: str = "whitespace_custom") -> dict[str, Any]:
         """
         공백 기반 분석기 설정
 
@@ -137,7 +137,7 @@ class AnalyzerConfig:
                     name: {
                         "type": "custom",
                         "tokenizer": "whitespace",
-                        "filter": ["lowercase"]
+                        "filter": ["lowercase"],
                     }
                 }
             }
@@ -145,10 +145,8 @@ class AnalyzerConfig:
 
     @staticmethod
     def ngram_analyzer(
-        name: str = "ngram_analyzer",
-        min_gram: int = 2,
-        max_gram: int = 3
-    ) -> Dict[str, Any]:
+        name: str = "ngram_analyzer", min_gram: int = 2, max_gram: int = 3
+    ) -> dict[str, Any]:
         """
         N-gram 분석기 설정
 
@@ -169,21 +167,21 @@ class AnalyzerConfig:
                         "type": "ngram",
                         "min_gram": min_gram,
                         "max_gram": max_gram,
-                        "token_chars": ["letter", "digit"]
+                        "token_chars": ["letter", "digit"],
                     }
                 },
                 "analyzer": {
                     name: {
                         "type": "custom",
                         "tokenizer": f"{name}_tokenizer",
-                        "filter": ["lowercase"]
+                        "filter": ["lowercase"],
                     }
-                }
+                },
             }
         }
 
     @classmethod
-    def merge_settings(cls, *settings: Dict[str, Any]) -> Dict[str, Any]:
+    def merge_settings(cls, *settings: dict[str, Any]) -> dict[str, Any]:
         """
         여러 분석기 설정을 병합
 
@@ -193,7 +191,7 @@ class AnalyzerConfig:
         Returns:
             병합된 설정
         """
-        merged: Dict[str, Any] = {"analysis": {}}
+        merged: dict[str, Any] = {"analysis": {}}
 
         for setting in settings:
             if "analysis" not in setting:

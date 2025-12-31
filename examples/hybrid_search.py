@@ -6,14 +6,15 @@ OpenSearch 2.10+ 필요 (Search Pipeline 지원)
 """
 
 from opensearch_client import (
-    OpenSearchClient,
-    IndexManager,
     HybridQueryBuilder,
-    SearchPipelineManager,
+    IndexManager,
+    OpenSearchClient,
 )
 
 
-def create_sample_embeddings(texts: list[str], dimension: int = 384) -> list[list[float]]:
+def create_sample_embeddings(
+    texts: list[str], dimension: int = 384
+) -> list[list[float]]:
     """
     샘플 임베딩 생성 (데모용)
 
@@ -33,11 +34,7 @@ def create_sample_embeddings(texts: list[str], dimension: int = 384) -> list[lis
 
 def main():
     # 1. 클라이언트 초기화
-    client = OpenSearchClient(
-        host="localhost",
-        port=9200,
-        use_ssl=False
-    )
+    client = OpenSearchClient(host="localhost", port=9200, use_ssl=False)
 
     if not client.ping():
         print("OpenSearch에 연결할 수 없습니다.")
@@ -57,7 +54,7 @@ def main():
         text_field="content",
         vector_field="embedding",
         vector_dimension=384,
-        use_korean_analyzer=True
+        use_korean_analyzer=True,
     )
     client.create_index(index_name, body)
     print(f"하이브리드 인덱스 '{index_name}' 생성 완료")
@@ -71,17 +68,32 @@ def main():
     client.setup_hybrid_pipeline(
         pipeline_id=pipeline_id,
         text_weight=0.3,  # 텍스트 점수 30%
-        vector_weight=0.7  # 벡터 점수 70%
+        vector_weight=0.7,  # 벡터 점수 70%
     )
     print(f"Search Pipeline '{pipeline_id}' 생성 완료")
 
     # 4. 문서 준비 및 임베딩 생성
     documents = [
-        {"title": "빵 만들기", "content": "빵은 밀가루와 물, 이스트를 넣어 반죽하여 만듭니다."},
-        {"title": "케이크 레시피", "content": "케이크는 밀가루, 달걀, 설탕, 버터로 만드는 디저트입니다."},
-        {"title": "파이썬 기초", "content": "파이썬은 배우기 쉬운 프로그래밍 언어입니다."},
-        {"title": "OpenSearch 검색", "content": "OpenSearch는 텍스트와 벡터 검색을 지원합니다."},
-        {"title": "기계학습 입문", "content": "기계학습은 데이터에서 패턴을 학습하는 기술입니다."},
+        {
+            "title": "빵 만들기",
+            "content": "빵은 밀가루와 물, 이스트를 넣어 반죽하여 만듭니다.",
+        },
+        {
+            "title": "케이크 레시피",
+            "content": "케이크는 밀가루, 달걀, 설탕, 버터로 만드는 디저트입니다.",
+        },
+        {
+            "title": "파이썬 기초",
+            "content": "파이썬은 배우기 쉬운 프로그래밍 언어입니다.",
+        },
+        {
+            "title": "OpenSearch 검색",
+            "content": "OpenSearch는 텍스트와 벡터 검색을 지원합니다.",
+        },
+        {
+            "title": "기계학습 입문",
+            "content": "기계학습은 데이터에서 패턴을 학습하는 기술입니다.",
+        },
     ]
 
     # 임베딩 생성
@@ -109,21 +121,15 @@ def main():
         query_vector=query_embedding,
         text_fields=["content"],
         vector_field="embedding",
-        k=5
+        k=5,
     )
 
     body = HybridQueryBuilder.build_search_body(
-        query=hybrid_query,
-        size=5,
-        source=["title", "content"]
+        query=hybrid_query, size=5, source=["title", "content"]
     )
 
     # Search Pipeline과 함께 검색
-    result = client.search(
-        index_name,
-        body,
-        params={"search_pipeline": pipeline_id}
-    )
+    result = client.search(index_name, body, params={"search_pipeline": pipeline_id})
 
     print("\n검색 결과:")
     for i, hit in enumerate(result["hits"]["hits"], 1):
@@ -150,7 +156,7 @@ def main():
     # 8. 정리
     client.delete_search_pipeline(pipeline_id)
     client.delete_index(index_name)
-    print(f"\n리소스 정리 완료")
+    print("\n리소스 정리 완료")
 
 
 if __name__ == "__main__":

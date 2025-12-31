@@ -4,7 +4,8 @@ OpenSearch 클라이언트 래퍼
 SSL 연결, 인증, 기본 CRUD 작업을 관리하는 메인 클라이언트 클래스
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 from opensearchpy import OpenSearch
 
 
@@ -19,11 +20,11 @@ class OpenSearchClient:
         self,
         host: str = "localhost",
         port: int = 9200,
-        user: Optional[str] = None,
-        password: Optional[str] = None,
+        user: str | None = None,
+        password: str | None = None,
         use_ssl: bool = True,
         verify_certs: bool = False,
-        **kwargs
+        **kwargs,
     ):
         """
         OpenSearch 클라이언트 초기화
@@ -44,7 +45,7 @@ class OpenSearchClient:
             http_auth=auth,
             use_ssl=use_ssl,
             verify_certs=verify_certs,
-            **kwargs
+            **kwargs,
         )
 
         # 서브 모듈은 지연 초기화
@@ -62,17 +63,15 @@ class OpenSearchClient:
         """OpenSearch 연결 상태 확인"""
         return self._client.ping()
 
-    def info(self) -> Dict[str, Any]:
+    def info(self) -> dict[str, Any]:
         """OpenSearch 클러스터 정보 반환"""
         return self._client.info()
 
     # === 인덱스 관리 ===
 
     def create_index(
-        self,
-        index_name: str,
-        body: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, index_name: str, body: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """
         인덱스 생성
 
@@ -85,7 +84,7 @@ class OpenSearchClient:
         """
         return self._client.indices.create(index=index_name, body=body or {})
 
-    def delete_index(self, index_name: str) -> Dict[str, Any]:
+    def delete_index(self, index_name: str) -> dict[str, Any]:
         """인덱스 삭제"""
         return self._client.indices.delete(index=index_name)
 
@@ -93,18 +92,15 @@ class OpenSearchClient:
         """인덱스 존재 여부 확인"""
         return self._client.indices.exists(index=index_name)
 
-    def refresh(self, index_name: str) -> Dict[str, Any]:
+    def refresh(self, index_name: str) -> dict[str, Any]:
         """인덱스 새로고침 (검색 가능하도록)"""
         return self._client.indices.refresh(index=index_name)
 
     # === 문서 관리 ===
 
     def index_document(
-        self,
-        index_name: str,
-        document: Dict[str, Any],
-        doc_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, index_name: str, document: dict[str, Any], doc_id: str | None = None
+    ) -> dict[str, Any]:
         """
         문서 인덱싱
 
@@ -116,18 +112,14 @@ class OpenSearchClient:
         Returns:
             인덱싱 결과
         """
-        return self._client.index(
-            index=index_name,
-            body=document,
-            id=doc_id
-        )
+        return self._client.index(index=index_name, body=document, id=doc_id)
 
     def bulk_index(
         self,
         index_name: str,
-        documents: List[Dict[str, Any]],
-        id_field: Optional[str] = None
-    ) -> Dict[str, Any]:
+        documents: list[dict[str, Any]],
+        id_field: str | None = None,
+    ) -> dict[str, Any]:
         """
         벌크 인덱싱
 
@@ -149,30 +141,17 @@ class OpenSearchClient:
 
         return self._client.bulk(body=actions)
 
-    def get_document(
-        self,
-        index_name: str,
-        doc_id: str
-    ) -> Dict[str, Any]:
+    def get_document(self, index_name: str, doc_id: str) -> dict[str, Any]:
         """문서 조회"""
         return self._client.get(index=index_name, id=doc_id)
 
-    def delete_document(
-        self,
-        index_name: str,
-        doc_id: str
-    ) -> Dict[str, Any]:
+    def delete_document(self, index_name: str, doc_id: str) -> dict[str, Any]:
         """문서 삭제"""
         return self._client.delete(index=index_name, id=doc_id)
 
     # === 검색 ===
 
-    def search(
-        self,
-        index_name: str,
-        body: Dict[str, Any],
-        **kwargs
-    ) -> Dict[str, Any]:
+    def search(self, index_name: str, body: dict[str, Any], **kwargs) -> dict[str, Any]:
         """
         검색 실행
 
@@ -189,10 +168,8 @@ class OpenSearchClient:
     # === Search Pipeline ===
 
     def create_search_pipeline(
-        self,
-        pipeline_id: str,
-        body: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, pipeline_id: str, body: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Search Pipeline 생성
 
@@ -204,23 +181,19 @@ class OpenSearchClient:
             생성 결과
         """
         return self._client.transport.perform_request(
-            "PUT",
-            f"/_search/pipeline/{pipeline_id}",
-            body=body
+            "PUT", f"/_search/pipeline/{pipeline_id}", body=body
         )
 
-    def delete_search_pipeline(self, pipeline_id: str) -> Dict[str, Any]:
+    def delete_search_pipeline(self, pipeline_id: str) -> dict[str, Any]:
         """Search Pipeline 삭제"""
         return self._client.transport.perform_request(
-            "DELETE",
-            f"/_search/pipeline/{pipeline_id}"
+            "DELETE", f"/_search/pipeline/{pipeline_id}"
         )
 
-    def get_search_pipeline(self, pipeline_id: str) -> Dict[str, Any]:
+    def get_search_pipeline(self, pipeline_id: str) -> dict[str, Any]:
         """Search Pipeline 조회"""
         return self._client.transport.perform_request(
-            "GET",
-            f"/_search/pipeline/{pipeline_id}"
+            "GET", f"/_search/pipeline/{pipeline_id}"
         )
 
     # === 하이브리드 검색 ===
@@ -229,18 +202,18 @@ class OpenSearchClient:
         self,
         index_name: str,
         query: str,
-        query_vector: List[float],
+        query_vector: list[float],
         pipeline: str,
-        text_fields: Optional[List[str]] = None,
+        text_fields: list[str] | None = None,
         vector_field: str = "vector",
         k: int = 10,
         size: int = 10,
         text_boost: float = 1.0,
         vector_boost: float = 1.0,
-        filter: Optional[Dict[str, Any]] = None,
-        source: Optional[List[str]] = None,
-        min_score: Optional[float] = None
-    ) -> Dict[str, Any]:
+        filter: dict[str, Any] | None = None,
+        source: list[str] | None = None,
+        min_score: float | None = None,
+    ) -> dict[str, Any]:
         """
         하이브리드 검색 실행
 
@@ -277,13 +250,11 @@ class OpenSearchClient:
             vector_boost=vector_boost,
             filter=filter,
             source=source,
-            min_score=min_score
+            min_score=min_score,
         )
 
         return self._client.search(
-            index=index_name,
-            body=body,
-            params={"search_pipeline": pipeline}
+            index=index_name, body=body, params={"search_pipeline": pipeline}
         )
 
     def setup_hybrid_pipeline(
@@ -291,8 +262,8 @@ class OpenSearchClient:
         pipeline_id: str = "hybrid-pipeline",
         text_weight: float = 0.3,
         vector_weight: float = 0.7,
-        use_rrf: bool = False
-    ) -> Dict[str, Any]:
+        use_rrf: bool = False,
+    ) -> dict[str, Any]:
         """
         하이브리드 검색용 Search Pipeline 설정
 
@@ -309,13 +280,11 @@ class OpenSearchClient:
 
         if use_rrf:
             body = SearchPipelineManager.build_pipeline_body(
-                description=f"Hybrid search pipeline with RRF",
-                use_rrf=True
+                description="Hybrid search pipeline with RRF", use_rrf=True
             )
         else:
             body = SearchPipelineManager.build_default_hybrid_pipeline(
-                text_weight=text_weight,
-                vector_weight=vector_weight
+                text_weight=text_weight, vector_weight=vector_weight
             )
 
         return self.create_search_pipeline(pipeline_id, body)

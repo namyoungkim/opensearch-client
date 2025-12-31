@@ -2,7 +2,6 @@
 HybridQueryBuilder 단위 테스트
 """
 
-import pytest
 from opensearch_client.hybrid_search import HybridQueryBuilder
 
 
@@ -12,8 +11,7 @@ class TestHybridQueryBuilder:
     def test_build_text_query(self):
         """텍스트 쿼리 생성"""
         query = HybridQueryBuilder.build_text_query(
-            query="검색어",
-            fields=["title", "content"]
+            query="검색어", fields=["title", "content"]
         )
 
         assert "multi_match" in query
@@ -28,19 +26,14 @@ class TestHybridQueryBuilder:
 
     def test_build_text_query_with_boost(self):
         """boost 적용 텍스트 쿼리"""
-        query = HybridQueryBuilder.build_text_query(
-            query="검색어",
-            boost=2.0
-        )
+        query = HybridQueryBuilder.build_text_query(query="검색어", boost=2.0)
 
         assert query["multi_match"]["boost"] == 2.0
 
     def test_build_knn_query(self, sample_vector):
         """k-NN 쿼리 생성"""
         query = HybridQueryBuilder.build_knn_query(
-            vector=sample_vector,
-            field="embedding",
-            k=5
+            vector=sample_vector, field="embedding", k=5
         )
 
         assert "knn" in query
@@ -50,10 +43,7 @@ class TestHybridQueryBuilder:
 
     def test_build_knn_query_with_boost(self, sample_vector):
         """boost 적용 k-NN 쿼리"""
-        query = HybridQueryBuilder.build_knn_query(
-            vector=sample_vector,
-            boost=1.5
-        )
+        query = HybridQueryBuilder.build_knn_query(vector=sample_vector, boost=1.5)
 
         assert query["knn"]["vector"]["boost"] == 1.5
 
@@ -64,7 +54,7 @@ class TestHybridQueryBuilder:
             query_vector=sample_vector,
             text_fields=["title"],
             vector_field="embedding",
-            k=10
+            k=10,
         )
 
         assert "hybrid" in query
@@ -80,9 +70,7 @@ class TestHybridQueryBuilder:
         """필터 적용 하이브리드 쿼리"""
         filter_query = {"term": {"category": "tech"}}
         query = HybridQueryBuilder.build_hybrid_query(
-            text_query="검색어",
-            query_vector=sample_vector,
-            filter=filter_query
+            text_query="검색어", query_vector=sample_vector, filter=filter_query
         )
 
         assert query["hybrid"]["filter"] == filter_query
@@ -93,7 +81,7 @@ class TestHybridQueryBuilder:
             text_query="검색어",
             query_vector=sample_vector,
             text_boost=0.3,
-            vector_boost=0.7
+            vector_boost=0.7,
         )
 
         text_query = query["hybrid"]["queries"][0]
@@ -106,9 +94,7 @@ class TestHybridQueryBuilder:
         """검색 본문 생성"""
         query = {"match_all": {}}
         body = HybridQueryBuilder.build_search_body(
-            query=query,
-            size=20,
-            source=["title", "content"]
+            query=query, size=20, source=["title", "content"]
         )
 
         assert body["query"] == query
@@ -118,8 +104,7 @@ class TestHybridQueryBuilder:
     def test_build_search_body_with_min_score(self):
         """min_score 적용 검색 본문"""
         body = HybridQueryBuilder.build_search_body(
-            query={"match_all": {}},
-            min_score=0.5
+            query={"match_all": {}}, min_score=0.5
         )
 
         assert body["min_score"] == 0.5
@@ -133,7 +118,7 @@ class TestHybridQueryBuilder:
             vector_field="embedding",
             k=10,
             size=20,
-            source=["title"]
+            source=["title"],
         )
 
         assert "query" in body

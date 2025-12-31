@@ -4,7 +4,6 @@ FastEmbed 임베딩 구현
 로컬에서 실행되는 빠른 임베딩 모델
 """
 
-from typing import List, Optional
 from opensearch_client.semantic_search.embeddings.base import BaseEmbedding
 
 
@@ -34,9 +33,9 @@ class FastEmbedEmbedding(BaseEmbedding):
 
     def __init__(
         self,
-        model_name: Optional[str] = None,
-        cache_dir: Optional[str] = None,
-        threads: Optional[int] = None
+        model_name: str | None = None,
+        cache_dir: str | None = None,
+        threads: int | None = None,
     ):
         """
         FastEmbed 임베딩 초기화
@@ -77,7 +76,7 @@ class FastEmbedEmbedding(BaseEmbedding):
     def model_name(self) -> str:
         return self._model_name
 
-    def embed(self, text: str) -> List[float]:
+    def embed(self, text: str) -> list[float]:
         """
         단일 텍스트 임베딩
 
@@ -90,7 +89,7 @@ class FastEmbedEmbedding(BaseEmbedding):
         embeddings = list(self._model.embed([text]))
         return embeddings[0].tolist()
 
-    def embed_batch(self, texts: List[str]) -> List[List[float]]:
+    def embed_batch(self, texts: list[str]) -> list[list[float]]:
         """
         배치 임베딩
 

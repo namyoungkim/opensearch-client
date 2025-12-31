@@ -4,7 +4,8 @@
 텍스트 쿼리와 벡터 쿼리를 결합한 하이브리드 검색 쿼리 생성
 """
 
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
+
 from opensearch_client.semantic_search.embeddings.base import BaseEmbedding
 
 
@@ -17,10 +18,8 @@ class HybridQueryBuilder:
 
     @staticmethod
     def build_text_query(
-        query: str,
-        fields: Optional[List[str]] = None,
-        boost: float = 1.0
-    ) -> Dict[str, Any]:
+        query: str, fields: list[str] | None = None, boost: float = 1.0
+    ) -> dict[str, Any]:
         """
         텍스트 검색 쿼리 생성
 
@@ -35,20 +34,13 @@ class HybridQueryBuilder:
         search_fields = fields or ["text"]
 
         return {
-            "multi_match": {
-                "query": query,
-                "fields": search_fields,
-                "boost": boost
-            }
+            "multi_match": {"query": query, "fields": search_fields, "boost": boost}
         }
 
     @staticmethod
     def build_knn_query(
-        vector: List[float],
-        field: str = "vector",
-        k: int = 10,
-        boost: float = 1.0
-    ) -> Dict[str, Any]:
+        vector: list[float], field: str = "vector", k: int = 10, boost: float = 1.0
+    ) -> dict[str, Any]:
         """
         k-NN 벡터 검색 쿼리 생성
 
@@ -61,28 +53,20 @@ class HybridQueryBuilder:
         Returns:
             k-NN 쿼리 DSL
         """
-        return {
-            "knn": {
-                field: {
-                    "vector": vector,
-                    "k": k,
-                    "boost": boost
-                }
-            }
-        }
+        return {"knn": {field: {"vector": vector, "k": k, "boost": boost}}}
 
     @classmethod
     def build_hybrid_query(
         cls,
         text_query: str,
-        query_vector: List[float],
-        text_fields: Optional[List[str]] = None,
+        query_vector: list[float],
+        text_fields: list[str] | None = None,
         vector_field: str = "vector",
         k: int = 10,
         text_boost: float = 1.0,
         vector_boost: float = 1.0,
-        filter: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        filter: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """
         하이브리드 검색 쿼리 생성
 
@@ -104,11 +88,7 @@ class HybridQueryBuilder:
         text_q = cls.build_text_query(text_query, text_fields, text_boost)
         knn_q = cls.build_knn_query(query_vector, vector_field, k, vector_boost)
 
-        hybrid_query: Dict[str, Any] = {
-            "hybrid": {
-                "queries": [text_q, knn_q]
-            }
-        }
+        hybrid_query: dict[str, Any] = {"hybrid": {"queries": [text_q, knn_q]}}
 
         if filter:
             hybrid_query["hybrid"]["filter"] = filter
@@ -120,13 +100,13 @@ class HybridQueryBuilder:
         cls,
         text_query: str,
         embedder: BaseEmbedding,
-        text_fields: Optional[List[str]] = None,
+        text_fields: list[str] | None = None,
         vector_field: str = "vector",
         k: int = 10,
         text_boost: float = 1.0,
         vector_boost: float = 1.0,
-        filter: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        filter: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """
         임베딩 모델을 사용한 하이브리드 검색 쿼리 생성
 
@@ -153,17 +133,17 @@ class HybridQueryBuilder:
             k=k,
             text_boost=text_boost,
             vector_boost=vector_boost,
-            filter=filter
+            filter=filter,
         )
 
     @staticmethod
     def build_search_body(
-        query: Dict[str, Any],
+        query: dict[str, Any],
         size: int = 10,
-        source: Optional[List[str]] = None,
-        min_score: Optional[float] = None,
-        search_pipeline: Optional[str] = None
-    ) -> Dict[str, Any]:
+        source: list[str] | None = None,
+        min_score: float | None = None,
+        search_pipeline: str | None = None,
+    ) -> dict[str, Any]:
         """
         검색 요청 본문 생성
 
@@ -177,10 +157,7 @@ class HybridQueryBuilder:
         Returns:
             검색 요청 본문
         """
-        body: Dict[str, Any] = {
-            "query": query,
-            "size": size
-        }
+        body: dict[str, Any] = {"query": query, "size": size}
 
         if source:
             body["_source"] = source
@@ -193,17 +170,17 @@ class HybridQueryBuilder:
     def build_complete_hybrid_search(
         cls,
         text_query: str,
-        query_vector: List[float],
-        text_fields: Optional[List[str]] = None,
+        query_vector: list[float],
+        text_fields: list[str] | None = None,
         vector_field: str = "vector",
         k: int = 10,
         size: int = 10,
         text_boost: float = 1.0,
         vector_boost: float = 1.0,
-        filter: Optional[Dict[str, Any]] = None,
-        source: Optional[List[str]] = None,
-        min_score: Optional[float] = None
-    ) -> Dict[str, Any]:
+        filter: dict[str, Any] | None = None,
+        source: list[str] | None = None,
+        min_score: float | None = None,
+    ) -> dict[str, Any]:
         """
         완전한 하이브리드 검색 요청 본문 생성
 
@@ -231,12 +208,9 @@ class HybridQueryBuilder:
             k=k,
             text_boost=text_boost,
             vector_boost=vector_boost,
-            filter=filter
+            filter=filter,
         )
 
         return cls.build_search_body(
-            query=query,
-            size=size,
-            source=source,
-            min_score=min_score
+            query=query, size=size, source=source, min_score=min_score
         )

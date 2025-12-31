@@ -4,7 +4,7 @@
 OpenAI 또는 FastEmbed 임베딩 모델을 사용하는 방법을 보여줍니다.
 """
 
-from opensearch_client import OpenSearchClient, IndexManager
+from opensearch_client import IndexManager, OpenSearchClient
 from opensearch_client.semantic_search.knn_search import KNNSearch
 
 
@@ -68,7 +68,7 @@ def example_with_openai():
     # OpenAI 임베딩 모델 초기화
     embedder = OpenAIEmbedding(
         model_name="text-embedding-3-small",
-        dimensions=1536  # 또는 더 작은 차원으로 축소 가능
+        dimensions=1536,  # 또는 더 작은 차원으로 축소 가능
     )
     print(f"OpenAI 모델: {embedder.model_name}")
     print(f"벡터 차원: {embedder.dimension}")
@@ -86,11 +86,7 @@ def semantic_search_example(embedder, client=None):
     시맨틱 검색 예제
     """
     if client is None:
-        client = OpenSearchClient(
-            host="localhost",
-            port=9200,
-            use_ssl=False
-        )
+        client = OpenSearchClient(host="localhost", port=9200, use_ssl=False)
 
     if not client.ping():
         print("OpenSearch에 연결할 수 없습니다.")
@@ -103,8 +99,7 @@ def semantic_search_example(embedder, client=None):
         client.delete_index(index_name)
 
     body = IndexManager.create_vector_index_body(
-        vector_field="embedding",
-        vector_dimension=embedder.dimension
+        vector_field="embedding", vector_dimension=embedder.dimension
     )
     client.create_index(index_name, body)
     print(f"\n인덱스 '{index_name}' 생성 완료")
@@ -123,9 +118,7 @@ def semantic_search_example(embedder, client=None):
     # 인덱싱
     for i, (text, embedding) in enumerate(zip(documents, embeddings)):
         client.index_document(
-            index_name,
-            {"text": text, "embedding": embedding},
-            doc_id=f"doc-{i}"
+            index_name, {"text": text, "embedding": embedding}, doc_id=f"doc-{i}"
         )
 
     client.refresh(index_name)
@@ -139,11 +132,7 @@ def semantic_search_example(embedder, client=None):
     query_vector = embedder.embed(search_query)
 
     # k-NN 검색
-    query = KNNSearch.knn_query(
-        field="embedding",
-        vector=query_vector,
-        k=3
-    )
+    query = KNNSearch.knn_query(field="embedding", vector=query_vector, k=3)
     body = KNNSearch.build_search_body(query, size=3)
 
     result = client.search(index_name, body)

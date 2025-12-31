@@ -5,7 +5,6 @@
 """
 
 from abc import ABC, abstractmethod
-from typing import List, Union
 
 
 class BaseEmbedding(ABC):
@@ -28,7 +27,7 @@ class BaseEmbedding(ABC):
         pass
 
     @abstractmethod
-    def embed(self, text: str) -> List[float]:
+    def embed(self, text: str) -> list[float]:
         """
         단일 텍스트를 벡터로 변환
 
@@ -41,7 +40,7 @@ class BaseEmbedding(ABC):
         pass
 
     @abstractmethod
-    def embed_batch(self, texts: List[str]) -> List[List[float]]:
+    def embed_batch(self, texts: list[str]) -> list[list[float]]:
         """
         여러 텍스트를 벡터로 변환
 
@@ -54,4 +53,6 @@ class BaseEmbedding(ABC):
         pass
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(model={self.model_name}, dim={self.dimension})"
+        return (
+            f"{self.__class__.__name__}(model={self.model_name}, dim={self.dimension})"
+        )

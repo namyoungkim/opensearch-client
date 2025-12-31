@@ -4,7 +4,7 @@
 멀티매치, 퍼지 매칭, 구문 매칭 등 OpenSearch DSL 쿼리 생성
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class TextQueryBuilder:
@@ -17,12 +17,12 @@ class TextQueryBuilder:
     @staticmethod
     def multi_match(
         query: str,
-        fields: List[str],
-        boost_map: Optional[Dict[str, float]] = None,
+        fields: list[str],
+        boost_map: dict[str, float] | None = None,
         fuzziness: str = "AUTO",
         operator: str = "or",
-        minimum_should_match: Optional[str] = None
-    ) -> Dict[str, Any]:
+        minimum_should_match: str | None = None,
+    ) -> dict[str, Any]:
         """
         멀티 매치 쿼리 생성
 
@@ -54,7 +54,7 @@ class TextQueryBuilder:
                 "query": query,
                 "fields": fields,
                 "fuzziness": fuzziness,
-                "operator": operator
+                "operator": operator,
             }
         }
 
@@ -65,11 +65,8 @@ class TextQueryBuilder:
 
     @staticmethod
     def match_phrase(
-        field: str,
-        query: str,
-        boost: float = 1.0,
-        slop: int = 0
-    ) -> Dict[str, Any]:
+        field: str, query: str, boost: float = 1.0, slop: int = 0
+    ) -> dict[str, Any]:
         """
         구문 일치 쿼리 생성
 
@@ -84,24 +81,16 @@ class TextQueryBuilder:
         Returns:
             구문 일치 쿼리 DSL
         """
-        return {
-            "match_phrase": {
-                field: {
-                    "query": query,
-                    "boost": boost,
-                    "slop": slop
-                }
-            }
-        }
+        return {"match_phrase": {field: {"query": query, "boost": boost, "slop": slop}}}
 
     @staticmethod
     def match(
         field: str,
         query: str,
         boost: float = 1.0,
-        fuzziness: Optional[str] = None,
-        operator: str = "or"
-    ) -> Dict[str, Any]:
+        fuzziness: str | None = None,
+        operator: str = "or",
+    ) -> dict[str, Any]:
         """
         단일 필드 매치 쿼리 생성
 
@@ -116,13 +105,7 @@ class TextQueryBuilder:
             매치 쿼리 DSL
         """
         query_body = {
-            "match": {
-                field: {
-                    "query": query,
-                    "boost": boost,
-                    "operator": operator
-                }
-            }
+            "match": {field: {"query": query, "boost": boost, "operator": operator}}
         }
 
         if fuzziness:
@@ -132,12 +115,12 @@ class TextQueryBuilder:
 
     @staticmethod
     def bool_query(
-        must: Optional[List[Dict[str, Any]]] = None,
-        should: Optional[List[Dict[str, Any]]] = None,
-        must_not: Optional[List[Dict[str, Any]]] = None,
-        filter: Optional[List[Dict[str, Any]]] = None,
-        minimum_should_match: int = 1
-    ) -> Dict[str, Any]:
+        must: list[dict[str, Any]] | None = None,
+        should: list[dict[str, Any]] | None = None,
+        must_not: list[dict[str, Any]] | None = None,
+        filter: list[dict[str, Any]] | None = None,
+        minimum_should_match: int = 1,
+    ) -> dict[str, Any]:
         """
         Bool 쿼리 생성
 
@@ -153,7 +136,7 @@ class TextQueryBuilder:
         Returns:
             Bool 쿼리 DSL
         """
-        bool_query: Dict[str, Any] = {"bool": {}}
+        bool_query: dict[str, Any] = {"bool": {}}
 
         if must:
             bool_query["bool"]["must"] = must
@@ -171,13 +154,13 @@ class TextQueryBuilder:
     def korean_search_query(
         cls,
         query: str,
-        required_text: Optional[str] = None,
+        required_text: str | None = None,
         boost_question: float = 2.0,
         boost_answer: float = 1.0,
         keyword_match: bool = True,
         min_should_match: str = "50%",
-        required_text_boost: float = 1.5
-    ) -> Dict[str, Any]:
+        required_text_boost: float = 1.5,
+    ) -> dict[str, Any]:
         """
         한국어 텍스트 검색 쿼리 생성
 
@@ -202,12 +185,12 @@ class TextQueryBuilder:
                 query=query,
                 fields=["question", "answer"],
                 boost_map={"question": boost_question, "answer": boost_answer},
-                fuzziness="AUTO"
+                fuzziness="AUTO",
             ),
             # answer 구문 일치 (가장 높은 가중치)
             cls.match_phrase("answer", query, boost=2.5),
             # question 구문 일치
-            cls.match_phrase("question", query, boost=2.0)
+            cls.match_phrase("question", query, boost=2.0),
         ]
 
         # must 절: 필수 조건
@@ -217,16 +200,18 @@ class TextQueryBuilder:
         if required_text:
             operator = "or" if keyword_match else "and"
 
-            must_clauses.append({
-                "multi_match": {
-                    "query": required_text,
-                    "fields": [f"answer^2.0", "question"],
-                    "operator": operator,
-                    "minimum_should_match": min_should_match,
-                    "fuzziness": "AUTO",
-                    "boost": required_text_boost
+            must_clauses.append(
+                {
+                    "multi_match": {
+                        "query": required_text,
+                        "fields": ["answer^2.0", "question"],
+                        "operator": operator,
+                        "minimum_should_match": min_should_match,
+                        "fuzziness": "AUTO",
+                        "boost": required_text_boost,
+                    }
                 }
-            })
+            )
 
             # 필수 텍스트 구문 일치도 should에 추가
             should_clauses.append(
@@ -236,18 +221,18 @@ class TextQueryBuilder:
         return cls.bool_query(
             must=must_clauses if must_clauses else None,
             should=should_clauses,
-            minimum_should_match=1
+            minimum_should_match=1,
         )
 
     @staticmethod
     def build_search_body(
-        query: Dict[str, Any],
+        query: dict[str, Any],
         size: int = 10,
         from_: int = 0,
-        sort: Optional[List[Dict[str, Any]]] = None,
-        source: Optional[List[str]] = None,
-        highlight: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        sort: list[dict[str, Any]] | None = None,
+        source: list[str] | None = None,
+        highlight: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """
         완전한 검색 요청 본문 생성
 
@@ -262,11 +247,7 @@ class TextQueryBuilder:
         Returns:
             검색 요청 본문
         """
-        body: Dict[str, Any] = {
-            "query": query,
-            "size": size,
-            "from": from_
-        }
+        body: dict[str, Any] = {"query": query, "size": size, "from": from_}
 
         if sort:
             body["sort"] = sort

@@ -4,7 +4,8 @@ k-NN 검색 모듈
 벡터 기반 근사 최근접 이웃 검색
 """
 
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
+
 from opensearch_client.semantic_search.embeddings.base import BaseEmbedding
 
 
@@ -18,10 +19,10 @@ class KNNSearch:
     @staticmethod
     def knn_query(
         field: str,
-        vector: List[float],
+        vector: list[float],
         k: int = 10,
-        filter: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        filter: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """
         k-NN 검색 쿼리 생성
 
@@ -34,14 +35,7 @@ class KNNSearch:
         Returns:
             k-NN 쿼리 DSL
         """
-        query: Dict[str, Any] = {
-            "knn": {
-                field: {
-                    "vector": vector,
-                    "k": k
-                }
-            }
-        }
+        query: dict[str, Any] = {"knn": {field: {"vector": vector, "k": k}}}
 
         if filter:
             query["knn"][field]["filter"] = filter
@@ -51,10 +45,10 @@ class KNNSearch:
     @staticmethod
     def script_score_query(
         field: str,
-        vector: List[float],
+        vector: list[float],
         space_type: str = "cosinesimil",
-        filter: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        filter: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """
         Script Score 기반 벡터 검색 쿼리
 
@@ -73,7 +67,7 @@ class KNNSearch:
         score_functions = {
             "cosinesimil": f"cosineSimilarity(params.query_vector, '{field}') + 1.0",
             "l2": f"1 / (1 + l2norm(params.query_vector, '{field}'))",
-            "innerproduct": f"(dotProduct(params.query_vector, '{field}') + 1.0) / 2.0"
+            "innerproduct": f"(dotProduct(params.query_vector, '{field}') + 1.0) / 2.0",
         }
 
         script_source = score_functions.get(space_type, score_functions["cosinesimil"])
@@ -81,22 +75,14 @@ class KNNSearch:
         return {
             "script_score": {
                 "query": filter or {"match_all": {}},
-                "script": {
-                    "source": script_source,
-                    "params": {
-                        "query_vector": vector
-                    }
-                }
+                "script": {"source": script_source, "params": {"query_vector": vector}},
             }
         }
 
     @staticmethod
     def neural_query(
-        field: str,
-        query_text: str,
-        model_id: str,
-        k: int = 10
-    ) -> Dict[str, Any]:
+        field: str, query_text: str, model_id: str, k: int = 10
+    ) -> dict[str, Any]:
         """
         Neural 검색 쿼리 생성
 
@@ -112,23 +98,17 @@ class KNNSearch:
             Neural 쿼리 DSL
         """
         return {
-            "neural": {
-                field: {
-                    "query_text": query_text,
-                    "model_id": model_id,
-                    "k": k
-                }
-            }
+            "neural": {field: {"query_text": query_text, "model_id": model_id, "k": k}}
         }
 
     @classmethod
     def build_search_body(
         cls,
-        query: Dict[str, Any],
+        query: dict[str, Any],
         size: int = 10,
-        source: Optional[List[str]] = None,
-        min_score: Optional[float] = None
-    ) -> Dict[str, Any]:
+        source: list[str] | None = None,
+        min_score: float | None = None,
+    ) -> dict[str, Any]:
         """
         검색 요청 본문 생성
 
@@ -141,10 +121,7 @@ class KNNSearch:
         Returns:
             검색 요청 본문
         """
-        body: Dict[str, Any] = {
-            "query": query,
-            "size": size
-        }
+        body: dict[str, Any] = {"query": query, "size": size}
 
         if source:
             body["_source"] = source
@@ -160,8 +137,8 @@ class KNNSearch:
         query_text: str,
         field: str = "vector",
         k: int = 10,
-        filter: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        filter: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """
         임베딩 모델을 사용한 검색 쿼리 생성
 

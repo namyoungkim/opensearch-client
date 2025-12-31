@@ -4,7 +4,6 @@ OpenAI 임베딩 구현
 OpenAI API를 사용한 임베딩
 """
 
-from typing import List, Optional
 from opensearch_client.semantic_search.embeddings.base import BaseEmbedding
 
 
@@ -27,9 +26,9 @@ class OpenAIEmbedding(BaseEmbedding):
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
-        model_name: Optional[str] = None,
-        dimensions: Optional[int] = None
+        api_key: str | None = None,
+        model_name: str | None = None,
+        dimensions: int | None = None,
     ):
         """
         OpenAI 임베딩 초기화
@@ -65,7 +64,7 @@ class OpenAIEmbedding(BaseEmbedding):
     def model_name(self) -> str:
         return self._model_name
 
-    def embed(self, text: str) -> List[float]:
+    def embed(self, text: str) -> list[float]:
         """
         단일 텍스트 임베딩
 
@@ -84,7 +83,7 @@ class OpenAIEmbedding(BaseEmbedding):
         response = self._client.embeddings.create(**kwargs)
         return response.data[0].embedding
 
-    def embed_batch(self, texts: List[str]) -> List[List[float]]:
+    def embed_batch(self, texts: list[str]) -> list[list[float]]:
         """
         배치 임베딩
 

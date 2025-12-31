@@ -5,9 +5,8 @@ pytest 설정 및 공통 fixture
 """
 
 import os
-import pytest
-from typing import Generator
 
+import pytest
 
 # 통합 테스트용 OpenSearch 설정
 OPENSEARCH_TEST_HOST = os.getenv("OPENSEARCH_TEST_HOST", "localhost")
@@ -16,12 +15,8 @@ OPENSEARCH_TEST_PORT = int(os.getenv("OPENSEARCH_TEST_PORT", "9201"))
 
 def pytest_configure(config):
     """pytest 마커 등록"""
-    config.addinivalue_line(
-        "markers", "integration: 통합 테스트 (OpenSearch 필요)"
-    )
-    config.addinivalue_line(
-        "markers", "e2e: E2E 테스트 (전체 파이프라인)"
-    )
+    config.addinivalue_line("markers", "integration: 통합 테스트 (OpenSearch 필요)")
+    config.addinivalue_line("markers", "e2e: E2E 테스트 (전체 파이프라인)")
 
 
 @pytest.fixture
@@ -56,9 +51,7 @@ def opensearch_client():
     from opensearch_client import OpenSearchClient
 
     client = OpenSearchClient(
-        host=OPENSEARCH_TEST_HOST,
-        port=OPENSEARCH_TEST_PORT,
-        use_ssl=False
+        host=OPENSEARCH_TEST_HOST, port=OPENSEARCH_TEST_PORT, use_ssl=False
     )
 
     # 연결 확인
@@ -94,7 +87,7 @@ def hybrid_test_index(opensearch_client, test_index_name):
         text_field="text",
         vector_field="vector",
         vector_dimension=384,
-        use_korean_analyzer=False
+        use_korean_analyzer=False,
     )
     opensearch_client.create_index(index_name, body)
 

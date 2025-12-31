@@ -80,8 +80,7 @@ class TestOpenSearchClient:
             # 문서 수 확인
             opensearch_client.refresh(index_name)
             search_result = opensearch_client.search(
-                index_name,
-                {"query": {"match_all": {}}}
+                index_name, {"query": {"match_all": {}}}
             )
             assert search_result["hits"]["total"]["value"] == len(sample_documents)
 
@@ -104,8 +103,7 @@ class TestOpenSearchClient:
 
             # 검색
             result = opensearch_client.search(
-                index_name,
-                {"query": {"match": {"text": "프로그래밍"}}}
+                index_name, {"query": {"match": {"text": "프로그래밍"}}}
             )
 
             assert result["hits"]["total"]["value"] >= 1

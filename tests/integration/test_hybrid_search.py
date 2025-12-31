@@ -6,6 +6,7 @@ docker-compose.test.yml로 테스트 환경을 시작하세요.
 """
 
 import pytest
+
 from opensearch_client import IndexManager
 
 
@@ -26,7 +27,7 @@ class TestHybridSearch:
         body = IndexManager.create_hybrid_index_body(
             vector_dimension=384,  # sample_vector와 동일
             text_fields={"text": "text"},
-            vector_field="vector"
+            vector_field="vector",
         )
         opensearch_client.create_index(index_name, body)
 
@@ -49,9 +50,7 @@ class TestHybridSearch:
 
         # 파이프라인 생성
         opensearch_client.setup_hybrid_pipeline(
-            pipeline_id=pipeline_id,
-            text_weight=0.3,
-            vector_weight=0.7
+            pipeline_id=pipeline_id, text_weight=0.3, vector_weight=0.7
         )
 
         yield pipeline_id
@@ -74,12 +73,11 @@ class TestHybridSearch:
         assert "vector" in properties
         assert properties["vector"]["type"] == "knn_vector"
 
-    def test_index_hybrid_document(self, opensearch_client, hybrid_index, sample_vector):
+    def test_index_hybrid_document(
+        self, opensearch_client, hybrid_index, sample_vector
+    ):
         """하이브리드 문서 인덱싱"""
-        doc = {
-            "text": "OpenSearch는 검색 엔진입니다",
-            "vector": sample_vector
-        }
+        doc = {"text": "OpenSearch는 검색 엔진입니다", "vector": sample_vector}
 
         result = opensearch_client.index_document(hybrid_index, doc, doc_id="test-1")
         assert result.get("result") in ["created", "updated"]
@@ -112,11 +110,7 @@ class TestHybridSearch:
         # k-NN 검색
         from opensearch_client.semantic_search.knn_search import KNNSearch
 
-        query = KNNSearch.knn_query(
-            field="vector",
-            vector=sample_vector,
-            k=2
-        )
+        query = KNNSearch.knn_query(field="vector", vector=sample_vector, k=2)
         body = KNNSearch.build_search_body(query, size=10)
 
         result = opensearch_client.search(hybrid_index, body)

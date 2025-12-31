@@ -5,17 +5,19 @@ OpenSearch 2.10+ Search Pipeline 설정 및 관리
 """
 
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 
 class NormalizationType(str, Enum):
     """점수 정규화 방법"""
+
     MIN_MAX = "min_max"
     L2 = "l2"
 
 
 class CombinationType(str, Enum):
     """점수 결합 방법"""
+
     ARITHMETIC_MEAN = "arithmetic_mean"
     GEOMETRIC_MEAN = "geometric_mean"
     HARMONIC_MEAN = "harmonic_mean"
@@ -33,8 +35,8 @@ class SearchPipelineManager:
     def create_normalization_processor(
         normalization_technique: NormalizationType = NormalizationType.MIN_MAX,
         combination_technique: CombinationType = CombinationType.ARITHMETIC_MEAN,
-        weights: Optional[List[float]] = None
-    ) -> Dict[str, Any]:
+        weights: list[float] | None = None,
+    ) -> dict[str, Any]:
         """
         Normalization Processor 설정 생성
 
@@ -46,14 +48,10 @@ class SearchPipelineManager:
         Returns:
             Normalization Processor 설정 딕셔너리
         """
-        processor: Dict[str, Any] = {
+        processor: dict[str, Any] = {
             "normalization-processor": {
-                "normalization": {
-                    "technique": normalization_technique.value
-                },
-                "combination": {
-                    "technique": combination_technique.value
-                }
+                "normalization": {"technique": normalization_technique.value},
+                "combination": {"technique": combination_technique.value},
             }
         }
 
@@ -66,9 +64,8 @@ class SearchPipelineManager:
 
     @staticmethod
     def create_rrf_processor(
-        rank_constant: int = 60,
-        window_size: int = 100
-    ) -> Dict[str, Any]:
+        rank_constant: int = 60, window_size: int = 100
+    ) -> dict[str, Any]:
         """
         RRF (Reciprocal Rank Fusion) Processor 설정 생성
 
@@ -87,8 +84,8 @@ class SearchPipelineManager:
                     "technique": "rrf",
                     "parameters": {
                         "rank_constant": rank_constant,
-                        "window_size": window_size
-                    }
+                        "window_size": window_size,
+                    },
                 }
             }
         }
@@ -100,10 +97,10 @@ class SearchPipelineManager:
         use_rrf: bool = False,
         normalization_technique: NormalizationType = NormalizationType.MIN_MAX,
         combination_technique: CombinationType = CombinationType.ARITHMETIC_MEAN,
-        weights: Optional[List[float]] = None,
+        weights: list[float] | None = None,
         rank_constant: int = 60,
-        window_size: int = 100
-    ) -> Dict[str, Any]:
+        window_size: int = 100,
+    ) -> dict[str, Any]:
         """
         Search Pipeline 본문 생성
 
@@ -121,26 +118,24 @@ class SearchPipelineManager:
         """
         if use_rrf:
             phase_results_processor = cls.create_rrf_processor(
-                rank_constant=rank_constant,
-                window_size=window_size
+                rank_constant=rank_constant, window_size=window_size
             )
         else:
             phase_results_processor = cls.create_normalization_processor(
                 normalization_technique=normalization_technique,
                 combination_technique=combination_technique,
-                weights=weights
+                weights=weights,
             )
 
         return {
             "description": description,
-            "phase_results_processors": [phase_results_processor]
+            "phase_results_processors": [phase_results_processor],
         }
 
     @staticmethod
     def build_default_hybrid_pipeline(
-        text_weight: float = 0.3,
-        vector_weight: float = 0.7
-    ) -> Dict[str, Any]:
+        text_weight: float = 0.3, vector_weight: float = 0.7
+    ) -> dict[str, Any]:
         """
         기본 하이브리드 검색 파이프라인 생성
 
@@ -156,16 +151,12 @@ class SearchPipelineManager:
             "phase_results_processors": [
                 {
                     "normalization-processor": {
-                        "normalization": {
-                            "technique": "min_max"
-                        },
+                        "normalization": {"technique": "min_max"},
                         "combination": {
                             "technique": "arithmetic_mean",
-                            "parameters": {
-                                "weights": [text_weight, vector_weight]
-                            }
-                        }
+                            "parameters": {"weights": [text_weight, vector_weight]},
+                        },
                     }
                 }
-            ]
+            ],
         }

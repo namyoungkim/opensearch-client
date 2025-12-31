@@ -2,11 +2,10 @@
 SearchPipelineManager 단위 테스트
 """
 
-import pytest
 from opensearch_client.hybrid_search.pipeline import (
-    SearchPipelineManager,
+    CombinationType,
     NormalizationType,
-    CombinationType
+    SearchPipelineManager,
 )
 
 
@@ -62,8 +61,7 @@ class TestSearchPipelineManager:
     def test_create_rrf_processor_custom_params(self):
         """커스텀 파라미터 RRF 프로세서"""
         processor = SearchPipelineManager.create_rrf_processor(
-            rank_constant=30,
-            window_size=50
+            rank_constant=30, window_size=50
         )
 
         srp = processor["score-ranker-processor"]
@@ -73,9 +71,7 @@ class TestSearchPipelineManager:
     def test_build_pipeline_body_normalization(self):
         """정규화 파이프라인 본문 생성"""
         body = SearchPipelineManager.build_pipeline_body(
-            description="Test pipeline",
-            use_rrf=False,
-            weights=[0.4, 0.6]
+            description="Test pipeline", use_rrf=False, weights=[0.4, 0.6]
         )
 
         assert body["description"] == "Test pipeline"
@@ -84,10 +80,7 @@ class TestSearchPipelineManager:
 
     def test_build_pipeline_body_rrf(self):
         """RRF 파이프라인 본문 생성"""
-        body = SearchPipelineManager.build_pipeline_body(
-            use_rrf=True,
-            rank_constant=40
-        )
+        body = SearchPipelineManager.build_pipeline_body(use_rrf=True, rank_constant=40)
 
         assert len(body["phase_results_processors"]) == 1
         assert "score-ranker-processor" in body["phase_results_processors"][0]
@@ -95,8 +88,7 @@ class TestSearchPipelineManager:
     def test_build_default_hybrid_pipeline(self):
         """기본 하이브리드 파이프라인 생성"""
         body = SearchPipelineManager.build_default_hybrid_pipeline(
-            text_weight=0.3,
-            vector_weight=0.7
+            text_weight=0.3, vector_weight=0.7
         )
 
         assert "description" in body
@@ -108,8 +100,7 @@ class TestSearchPipelineManager:
     def test_build_default_hybrid_pipeline_equal_weights(self):
         """동일 가중치 하이브리드 파이프라인"""
         body = SearchPipelineManager.build_default_hybrid_pipeline(
-            text_weight=0.5,
-            vector_weight=0.5
+            text_weight=0.5, vector_weight=0.5
         )
 
         np = body["phase_results_processors"][0]["normalization-processor"]

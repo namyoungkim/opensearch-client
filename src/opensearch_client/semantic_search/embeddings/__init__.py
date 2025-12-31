@@ -10,13 +10,17 @@ from opensearch_client.semantic_search.embeddings.base import BaseEmbedding
 __all__ = ["BaseEmbedding"]
 
 try:
-    from opensearch_client.semantic_search.embeddings.fastembed import FastEmbedEmbedding
+    from opensearch_client.semantic_search.embeddings.fastembed import (
+        FastEmbedEmbedding,
+    )
+
     __all__.append("FastEmbedEmbedding")
 except ImportError:
     pass
 
 try:
     from opensearch_client.semantic_search.embeddings.openai import OpenAIEmbedding
+
     __all__.append("OpenAIEmbedding")
 except ImportError:
     pass

@@ -1,13 +1,15 @@
 """VectorStore 단위 테스트"""
 
-import pytest
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 
-from opensearch_client.vectorstore import VectorStore, SearchResult
+import pytest
+
+from opensearch_client.vectorstore import SearchResult, VectorStore
 
 
 class MockEmbedder:
     """테스트용 임베더"""
+
     dimension = 384
 
     def embed(self, text: str) -> list:
@@ -68,10 +70,7 @@ class TestVectorStoreAdd:
         mock_client.refresh.assert_called_once()
 
     def test_add_with_metadata(self, vector_store, mock_client):
-        vector_store.add(
-            ["테스트 문서"],
-            metadata=[{"category": "test"}]
-        )
+        vector_store.add(["테스트 문서"], metadata=[{"category": "test"}])
 
         call_args = mock_client.index_document.call_args
         doc = call_args[0][1]
@@ -105,8 +104,8 @@ class TestVectorStoreSearch:
                         "_source": {
                             "content": "검색 결과 문서",
                             "embedding": [0.1] * 384,
-                            "category": "test"
-                        }
+                            "category": "test",
+                        },
                     }
                 ]
             }
@@ -155,9 +154,7 @@ class TestVectorStoreClear:
 
 class TestVectorStoreCount:
     def test_count_returns_total(self, vector_store, mock_client):
-        mock_client.search.return_value = {
-            "hits": {"total": {"value": 42}}
-        }
+        mock_client.search.return_value = {"hits": {"total": {"value": 42}}}
 
         count = vector_store.count()
 
