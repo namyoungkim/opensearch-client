@@ -150,7 +150,7 @@ def bulk_index(..., raise_on_error: bool = True) -> Dict[str, Any]:
 
 ## 3. 코드 정리
 
-### 3.1 미사용 파라미터 제거 또는 구현
+### 3.1 미사용 파라미터 제거 또는 구현 ✅ 완료
 
 **파일**: `src/opensearch_client/index.py:91-116`
 
@@ -189,7 +189,7 @@ def get_knn_index_settings(ef_search: int = 100) -> Dict[str, Any]:
 
 ---
 
-### 3.2 미사용 의존성 제거
+### 3.2 미사용 의존성 제거 ✅ 완료
 
 **파일**: `pyproject.toml:22`
 
@@ -213,7 +213,7 @@ dependencies = [
 
 ---
 
-### 3.3 미사용 import 제거
+### 3.3 미사용 import 제거 ✅ 완료 (이미 정리됨)
 
 **파일**: `src/opensearch_client/hybrid_search/hybrid_query.py:7`
 
@@ -225,7 +225,7 @@ from typing import Any, Dict, List, Optional, Union  # Union 미사용
 
 ---
 
-### 3.4 Python 빌트인 섀도잉 수정
+### 3.4 Python 빌트인 섀도잉 수정 ✅ 완료
 
 **파일**: `src/opensearch_client/vectorstore.py:143`
 
@@ -297,7 +297,7 @@ def korean_search_query(
 
 ---
 
-### 4.2 비동기 지원 추가
+### 4.2 비동기 지원 추가 ✅ 완료
 
 **현재 상태**:
 - `opensearch-py`는 `AsyncOpenSearch` 지원
@@ -372,7 +372,7 @@ def __init__(
 |---------|------|
 | **높음** | ~~배치 임베딩 활용~~ ✅, ~~예외 처리 세분화~~ ✅ |
 | **중간** | ~~bulk_index 검증~~ ✅, ~~필드명 파라미터화~~ ✅, ~~SSL 문서화~~ ✅, ~~테스트 추가~~ ✅ |
-| **낮음** | 미사용 코드 정리, 비동기 지원 |
+| **낮음** | ~~미사용 코드 정리~~ ✅, ~~비동기 지원~~ ✅ |
 
 ---
 
@@ -383,3 +383,4 @@ def __init__(
 | 2025-12-31 | Claude Code | 초기 작성 |
 | 2025-12-31 | Claude Code | 고우선순위 항목 구현 완료 (1.1, 2.1, 2.2) |
 | 2025-12-31 | Claude Code | 중간 우선순위 항목 구현 완료 (2.3, 4.1, 5.1, 6.1) |
+| 2025-12-31 | Claude Code | 낮은 우선순위 항목 구현 완료 (3.1-3.4, 4.2) - 모든 개선 완료 🎉 |
