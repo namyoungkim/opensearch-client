@@ -81,3 +81,19 @@ markers = [
     "integration: marks tests as integration tests (requires OpenSearch)",
     "e2e: marks tests as end-to-end tests",
 ]
+
+# ===== Coverage =====
+[tool.coverage.run]
+source = ["src/opensearch_client"]
+branch = true
+omit = ["*/tests/*", "*/__pycache__/*"]
+
+[tool.coverage.report]
+fail_under = 70
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "raise ImportError",
+]
