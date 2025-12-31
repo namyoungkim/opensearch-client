@@ -87,9 +87,22 @@ uv run ruff format .
 uv run ty check
 ```
 
+### Pre-commit Hooks
+
+```bash
+# Install hooks (first time only)
+uv run pre-commit install
+
+# Run manually on all files
+uv run pre-commit run --all-files
+```
+
+Hooks run automatically on `git commit`:
+- `ruff` - lint with auto-fix
+- `ruff-format` - code formatting
+- `ty` - type checking
+
 ### Before Commit Checklist
 
-1. `uv run ruff check --fix .`
-2. `uv run ruff format .`
-3. `uv run ty check`
-4. `uv run pytest`
+1. `uv run pre-commit run --all-files` (or hooks run automatically)
+2. `uv run pytest`
