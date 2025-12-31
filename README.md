@@ -1,6 +1,7 @@
 # OpenSearch Client
 
 [![CI](https://github.com/namyoungkim/opensearch-client/actions/workflows/ci.yml/badge.svg)](https://github.com/namyoungkim/opensearch-client/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/namyoungkim/opensearch-client/graph/badge.svg)](https://codecov.io/gh/namyoungkim/opensearch-client)
 
 OpenSearch client with hybrid search support for Korean text.
 
