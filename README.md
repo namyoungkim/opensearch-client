@@ -43,20 +43,22 @@ This is a **client library** for OpenSearch. You need a running OpenSearch serve
 ### Running OpenSearch Locally
 
 ```bash
-# Using Docker (recommended)
+# Using Docker (recommended for development with Korean support)
+docker compose -f docker-compose.dev.yml up -d
+
+# Or simple Docker run (no Nori plugin)
 docker run -d -p 9200:9200 \
   -e "discovery.type=single-node" \
   -e "plugins.security.disabled=true" \
   opensearchproject/opensearch:latest
-
-# Or using the provided docker-compose
-docker compose -f docker-compose.test.yml up -d  # Port 9201
 ```
 
 ### Cloud Options
 
 - **AWS OpenSearch Service**: Managed OpenSearch in AWS
 - **Self-hosted cluster**: Deploy on your own infrastructure
+
+For detailed setup instructions including production deployment and environment management, see [Server Setup Guide](docs/SERVER_SETUP.md).
 
 ## Installation
 
