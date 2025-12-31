@@ -82,27 +82,17 @@ class IndexManager:
         return {"properties": properties}
 
     @staticmethod
-    def get_knn_index_settings(
-        vector_dimension: int = 1536,
-        space_type: str = "cosinesimil",
-        engine: str = "lucene",
-        ef_construction: int = 128,
-        m: int = 16,
-    ) -> dict[str, Any]:
+    def get_knn_index_settings(ef_search: int = 100) -> dict[str, Any]:
         """
         k-NN 벡터 인덱스 설정 반환
 
         Args:
-            vector_dimension: 벡터 차원 (OpenAI: 1536, FastEmbed: 384)
-            space_type: 유사도 측정 방법 (cosinesimil, l2, innerproduct)
-            engine: k-NN 엔진 (lucene, nmslib, faiss)
-            ef_construction: HNSW 그래프 구축 파라미터
-            m: HNSW 연결 수
+            ef_search: 검색 시 탐색할 후보 수 (높을수록 정확도 증가, 속도 감소)
 
         Returns:
             k-NN 인덱스 설정
         """
-        return {"index": {"knn": True, "knn.algo_param.ef_search": 100}}
+        return {"index": {"knn": True, "knn.algo_param.ef_search": ef_search}}
 
     @staticmethod
     def get_knn_field_mapping(
@@ -170,10 +160,10 @@ class IndexManager:
         if use_korean_analyzer:
             settings = {
                 **cls.get_korean_analyzer_settings(),
-                **cls.get_knn_index_settings(vector_dimension),
+                **cls.get_knn_index_settings(),
             }
         else:
-            settings = cls.get_knn_index_settings(vector_dimension)
+            settings = cls.get_knn_index_settings()
 
         # 매핑 병합
         text_mapping = cls.get_text_index_mapping(text_fields, text_analyzer)
@@ -233,7 +223,7 @@ class IndexManager:
         Returns:
             인덱스 설정 (settings + mappings)
         """
-        settings = cls.get_knn_index_settings(vector_dimension)
+        settings = cls.get_knn_index_settings()
         vector_mapping = cls.get_knn_field_mapping(
             vector_field, vector_dimension, space_type
         )

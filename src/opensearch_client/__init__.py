@@ -15,9 +15,16 @@ from opensearch_client.semantic_search.knn_search import KNNSearch
 from opensearch_client.text_search import AnalyzerConfig, TextQueryBuilder
 from opensearch_client.vectorstore import SearchResult, VectorStore
 
+# AsyncOpenSearchClient는 aiohttp가 설치된 경우에만 사용 가능
+try:
+    from opensearch_client.async_client import AsyncOpenSearchClient
+except ImportError:
+    AsyncOpenSearchClient = None  # type: ignore[misc, assignment]
+
 __version__ = "0.1.0"
 __all__ = [
     "AnalyzerConfig",
+    "AsyncOpenSearchClient",
     "BulkIndexError",
     "HybridQueryBuilder",
     "IndexManager",

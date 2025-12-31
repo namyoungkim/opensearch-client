@@ -19,13 +19,13 @@ classifiers = [
 ]
 dependencies = [
     "opensearch-py>=3.0.0",
-    "pydantic>=2.0",
 ]
 
 [project.optional-dependencies]
 openai = ["openai>=1.0"]
 local = ["fastembed>=0.4"]
-all = ["openai>=1.0", "fastembed>=0.4"]
+async = ["aiohttp>=3.0"]
+all = ["openai>=1.0", "fastembed>=0.4", "aiohttp>=3.0"]
 
 [project.urls]
 Homepage = "https://github.com/namyoungkim/opensearch-client"

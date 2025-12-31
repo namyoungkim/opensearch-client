@@ -164,7 +164,10 @@ class VectorStore:
         return doc_ids
 
     def add_one(
-        self, text: str, metadata: dict[str, Any] | None = None, id: str | None = None
+        self,
+        text: str,
+        metadata: dict[str, Any] | None = None,
+        doc_id: str | None = None,
     ) -> str:
         """
         단일 텍스트 추가
@@ -172,12 +175,14 @@ class VectorStore:
         Args:
             text: 저장할 텍스트
             metadata: 메타데이터 (선택)
-            id: 문서 ID (선택)
+            doc_id: 문서 ID (선택)
 
         Returns:
             저장된 문서 ID
         """
-        ids = self.add([text], [metadata] if metadata else None, [id] if id else None)
+        ids = self.add(
+            [text], [metadata] if metadata else None, [doc_id] if doc_id else None
+        )
         return ids[0]
 
     def search(
