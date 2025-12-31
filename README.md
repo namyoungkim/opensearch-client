@@ -10,6 +10,7 @@ OpenSearch client with hybrid search support for Korean text.
 - **Semantic Search**: Vector embeddings with k-NN search
 - **Hybrid Search**: Combined text + vector search with Search Pipeline (OpenSearch 2.10+)
 - **VectorStore**: Simple high-level API for vector storage and retrieval
+- **Async Support**: Full async/await support with `AsyncOpenSearchClient`
 
 ## Installation
 
@@ -22,6 +23,9 @@ uv add opensearch-client[openai]
 
 # With local embeddings (FastEmbed)
 uv add opensearch-client[local]
+
+# With async support
+uv add opensearch-client[async]
 
 # All features
 uv add opensearch-client[all]
@@ -196,6 +200,63 @@ store.count()              # Get document count
 store.delete(["doc-id"])   # Delete by ID
 store.clear()              # Delete all documents
 ```
+
+### 5. Async Client
+
+```python
+import asyncio
+from opensearch_client import AsyncOpenSearchClient
+
+async def main():
+    # Initialize async client
+    async with AsyncOpenSearchClient(
+        host="localhost",
+        port=9200,
+        use_ssl=False
+    ) as client:
+        # Check connection
+        print(await client.ping())
+
+        # Create index
+        await client.create_index("async-docs", {
+            "settings": {"index": {"knn": True}},
+            "mappings": {"properties": {"text": {"type": "text"}}}
+        })
+
+        # Index documents
+        await client.bulk_index("async-docs", [
+            {"text": "First document"},
+            {"text": "Second document"},
+        ])
+        await client.refresh("async-docs")
+
+        # Search
+        results = await client.search("async-docs", {
+            "query": {"match": {"text": "document"}}
+        })
+        print(results["hits"]["hits"])
+
+        # Hybrid search (requires pipeline setup)
+        await client.setup_hybrid_pipeline(
+            pipeline_id="async-pipeline",
+            text_weight=0.3,
+            vector_weight=0.7
+        )
+
+        results = await client.hybrid_search(
+            index_name="async-docs",
+            query="document",
+            query_vector=[0.1] * 384,  # Your embedding here
+            pipeline="async-pipeline",
+            text_fields=["text"],
+            vector_field="embedding"
+        )
+
+# Run
+asyncio.run(main())
+```
+
+**Note:** Async support requires the `async` extra: `uv add opensearch-client[async]`
 
 ## Development
 
