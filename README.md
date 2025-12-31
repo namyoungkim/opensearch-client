@@ -13,6 +13,51 @@ OpenSearch client with hybrid search support for Korean text.
 - **VectorStore**: Simple high-level API for vector storage and retrieval
 - **Async Support**: Full async/await support with `AsyncOpenSearchClient`
 
+## Prerequisites
+
+This is a **client library** for OpenSearch. You need a running OpenSearch server to use this package.
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Your Application                                           │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │  from opensearch_client import OpenSearchClient       │  │
+│  │  client = OpenSearchClient(host="...", port=9200)     │  │
+│  │  client.search(...)                                   │  │
+│  └───────────────────────────────────────────────────────┘  │
+│                            │                                │
+│                   opensearch-client (this package)          │
+└────────────────────────────┼────────────────────────────────┘
+                             │ HTTP/HTTPS
+                             ▼
+┌─────────────────────────────────────────────────────────────┐
+│  OpenSearch Server (separate process)                       │
+│  - Docker container (local development)                     │
+│  - AWS OpenSearch Service (production)                      │
+│  - Self-hosted cluster                                      │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Running OpenSearch Locally
+
+```bash
+# Using Docker (recommended)
+docker run -d -p 9200:9200 \
+  -e "discovery.type=single-node" \
+  -e "plugins.security.disabled=true" \
+  opensearchproject/opensearch:latest
+
+# Or using the provided docker-compose
+docker compose -f docker-compose.test.yml up -d  # Port 9201
+```
+
+### Cloud Options
+
+- **AWS OpenSearch Service**: Managed OpenSearch in AWS
+- **Self-hosted cluster**: Deploy on your own infrastructure
+
 ## Installation
 
 ```bash
