@@ -1,5 +1,6 @@
 # OpenSearch Client
 
+[![PyPI version](https://badge.fury.io/py/opensearch-client.svg)](https://pypi.org/project/opensearch-client/)
 [![CI](https://github.com/namyoungkim/opensearch-client/actions/workflows/ci.yml/badge.svg)](https://github.com/namyoungkim/opensearch-client/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/namyoungkim/opensearch-client/graph/badge.svg)](https://codecov.io/gh/namyoungkim/opensearch-client)
 
