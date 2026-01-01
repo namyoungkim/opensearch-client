@@ -67,6 +67,19 @@ curl -X POST "http://localhost:9200/_analyze" \
 | `a1rtisan/opensearch-nori:latest` | OpenSearch 3.0 + Nori plugin |
 | `opensearchproject/opensearch:latest` | Official (no Nori) |
 
+## Troubleshooting
+
+```bash
+# Check container logs
+docker logs opensearch-dev
+
+# Check process using port 9200
+lsof -i :9200
+
+# Reset data (remove volumes)
+docker compose -f docker-compose.dev.yml down -v
+```
+
 ## Links
 
 - Docker Hub: https://hub.docker.com/r/a1rtisan/opensearch-nori

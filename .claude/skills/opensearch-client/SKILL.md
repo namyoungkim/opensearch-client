@@ -52,8 +52,9 @@ client = OpenSearchClient(host="localhost", port=9200, use_ssl=False)
 embedder = OpenAIEmbedding()
 
 body = IndexManager.create_hybrid_index_body(
-    text_field="content", vector_field="embedding",
-    vector_dimension=embedder.dimension, use_korean_analyzer=True
+    vector_dimension=embedder.dimension,
+    vector_field="embedding",
+    use_korean_analyzer=True
 )
 client.create_index("hybrid", body)
 client.setup_hybrid_pipeline("pipeline", text_weight=0.3, vector_weight=0.7)
@@ -78,7 +79,39 @@ client = OpenSearchClient(host="localhost", port=9200, use_ssl=False)
 store = VectorStore("store", FastEmbedEmbedding(), client)
 store.add(["Doc 1", "Doc 2"])
 results = store.search("query", k=5)
+for r in results:
+    print(f"{r.text} (score: {r.score:.4f})")
 ```
+
+## API Reference
+
+### IndexManager
+
+| Method | Description |
+|--------|-------------|
+| `create_text_index_body(text_field, use_korean_analyzer)` | Text search index |
+| `create_vector_index_body(vector_field, vector_dimension, space_type)` | Vector search index |
+| `create_hybrid_index_body(vector_dimension, vector_field, use_korean_analyzer)` | Hybrid search index |
+
+### VectorStore
+
+| Method | Returns |
+|--------|---------|
+| `add(texts, metadata?, ids?)` | `list[str]` (doc IDs) |
+| `add_one(text, metadata?, doc_id?)` | `str` (doc ID) |
+| `search(query, k, filter?)` | `list[SearchResult]` |
+| `delete(ids)` | None |
+| `clear()` | None |
+| `count()` | `int` |
+
+### SearchResult (dataclass)
+
+| Attribute | Type |
+|-----------|------|
+| `text` | str |
+| `score` | float |
+| `metadata` | dict |
+| `id` | str |
 
 ## Links
 
