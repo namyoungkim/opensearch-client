@@ -8,19 +8,29 @@ allowed-tools: Bash
 
 Docker-based OpenSearch server with Korean (Nori) analyzer.
 
-## Start Server
+## Quick Start (docker-compose)
 
 ```bash
-# Using docker-compose (recommended, with persistent data)
-cp .env.example .env  # Set password first
-docker compose -f docker-compose.dev.yml up -d
+# 1. Copy .env and set PROJECT_NAME
+cp .claude/skills/opensearch-server/assets/.env.example .env
 
-# Or using pre-built image (amd64/arm64)
+# 2. Start server
+docker compose -f .claude/skills/opensearch-server/assets/docker-compose.yml up -d
+
+# 3. Verify
+curl -s http://localhost:9200
+```
+
+## Quick Start (docker run)
+
+```bash
 docker run -d --name opensearch \
   -p 9200:9200 -p 9600:9600 \
   -e "discovery.type=single-node" \
   -e "plugins.security.disabled=true" \
   -e "OPENSEARCH_INITIAL_ADMIN_PASSWORD=YourStr0ngP@ss!" \
+  -e "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m" \
+  -v opensearch-data:/usr/share/opensearch/data \
   a1rtisan/opensearch-nori:latest
 ```
 
@@ -29,10 +39,14 @@ docker run -d --name opensearch \
 ## Stop Server
 
 ```bash
+# docker-compose
+docker compose -f .claude/skills/opensearch-server/assets/docker-compose.yml down
+
+# docker run
 docker stop opensearch && docker rm opensearch
 
-# Or with docker-compose
-docker compose -f docker-compose.dev.yml down
+# Remove data
+docker volume rm opensearch-data
 ```
 
 ## Check Status
@@ -71,13 +85,13 @@ curl -X POST "http://localhost:9200/_analyze" \
 
 ```bash
 # Check container logs
-docker logs opensearch-dev
+docker logs ${PROJECT_NAME:-opensearch}-dev
 
 # Check process using port 9200
 lsof -i :9200
 
 # Reset data (remove volumes)
-docker compose -f docker-compose.dev.yml down -v
+docker compose -f .claude/skills/opensearch-server/assets/docker-compose.yml down -v
 ```
 
 ## Links
