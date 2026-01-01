@@ -45,13 +45,15 @@ This is a **client library** for OpenSearch. You need a running OpenSearch serve
 
 ```bash
 # Using Docker (recommended for development with Korean support)
+cp .env.example .env  # Set your password
 docker compose -f docker-compose.dev.yml up -d
 
-# Or simple Docker run (no Nori plugin)
+# Or using pre-built image from Docker Hub
 docker run -d -p 9200:9200 \
   -e "discovery.type=single-node" \
   -e "plugins.security.disabled=true" \
-  opensearchproject/opensearch:latest
+  -e "OPENSEARCH_INITIAL_ADMIN_PASSWORD=YourStr0ngP@ss!" \
+  a1rtisan/opensearch-nori:latest
 ```
 
 ### Cloud Options

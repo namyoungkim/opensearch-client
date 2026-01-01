@@ -11,16 +11,20 @@ Docker-based OpenSearch server with Korean (Nori) analyzer.
 ## Start Server
 
 ```bash
-# Using pre-built image (recommended)
+# Using docker-compose (recommended, with persistent data)
+cp .env.example .env  # Set password first
+docker compose -f docker-compose.dev.yml up -d
+
+# Or using pre-built image (amd64/arm64)
 docker run -d --name opensearch \
   -p 9200:9200 -p 9600:9600 \
   -e "discovery.type=single-node" \
   -e "plugins.security.disabled=true" \
+  -e "OPENSEARCH_INITIAL_ADMIN_PASSWORD=YourStr0ngP@ss!" \
   a1rtisan/opensearch-nori:latest
-
-# Using docker-compose (with persistent data)
-docker compose -f docker-compose.dev.yml up -d
 ```
+
+**Note**: Password requires 8+ chars with upper/lower/digit/special.
 
 ## Stop Server
 
