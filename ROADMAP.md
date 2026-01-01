@@ -1,13 +1,13 @@
 # Roadmap
 
-Current version: **v0.1.0** (Alpha) - [PyPI](https://pypi.org/project/opensearch-client/)
+Current version: **v0.2.0** (Alpha) - [PyPI](https://pypi.org/project/opensearch-client/) | [Docker Hub](https://hub.docker.com/r/a1rtisan/opensearch-nori)
 
 ## v0.1.x - Release & Packaging
 
 | Feature | Description | Status |
 |---------|-------------|--------|
 | PyPI Publish | Automated PyPI deployment via GitHub Actions | ✅ Done |
-| Docker Hub | `opensearch-nori` image with Korean analyzer | Planned |
+| Docker Hub | [`opensearch-nori`](https://hub.docker.com/r/a1rtisan/opensearch-nori) image with Korean analyzer | ✅ Done |
 
 ## v0.2.0 - Core Enhancements
 
